@@ -1,0 +1,12 @@
+[submodule "libs/static_lambda"]
+	path = libs/static_lambda
+	url = https://github.com/kerrytazi/static_lambda.git
+[submodule "libs/simdutf"]
+	path = libs/simdutf
+	url = https://github.com/simdutf/simdutf.git
+[submodule "libs/json"]
+	path = libs/json
+	url = https://github.com/nlohmann/json.git
+[submodule "libs/imgui"]
+	path = libs/imgui
+	url = https://github.com/ocornut/imgui.git

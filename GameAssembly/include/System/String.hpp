@@ -1,0 +1,46 @@
+#pragma once
+
+#include "System/Object.hpp"
+
+#include <string>
+#include <string_view>
+
+namespace System
+{
+
+class String : Object
+{
+public:
+
+	static String* New(const std::string_view& str);
+	static String* New(const std::u16string_view& str);
+
+	template <size_t N>
+	static String* New(const char (&str)[N])
+	{
+		return New(std::string_view(str, N - 1));
+	}
+
+	template <size_t N>
+	static String* New(const char16_t (&str)[N])
+	{
+		return New(std::u16string_view(str, N - 1));
+	}
+
+	std::u16string_view AsU16StringView() const
+	{
+		if ((uintptr_t)this == 0)
+			return u"(null)";
+
+		return std::u16string_view((const char16_t*)(&firstChar), length);
+	}
+
+	std::string AsString() const;
+
+private:
+
+	int32_t length;
+	wchar_t firstChar;
+};
+
+} // namespace System

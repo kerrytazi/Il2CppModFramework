@@ -1,0 +1,129 @@
+#pragma once
+
+#include "common/NoImplement.hpp"
+
+#include "il2cpp/Type.hpp"
+
+#include <string_view>
+#include <span>
+
+namespace il2cpp
+{
+
+class Image;
+class Method;
+class Field;
+class Property;
+class Event;
+
+class Class : NoImplement
+{
+public:
+
+	std::string_view GetName() const { return name; } // null-terminated
+	std::string_view GetNamespace() const { return namespaze; } // null-terminated
+
+	std::span<const Method*> GetMethods() const;
+	std::span<const Field> GetFields() const;
+	std::span<const Property> GetProperties() const;
+	std::span<const Event> GetEvents() const;
+
+	static const Class* Find(std::string_view namespaze, std::string_view class_name);
+
+private:
+
+	struct Il2CppVirtualInvokeData
+	{
+		void* methodPtr;
+		const Method* method;
+	};
+	
+	// The following fields are always valid for a Class structure
+	const Image* image;
+	void* gc_desc;
+	const char* name;
+	const char* namespaze;
+	Type byval_arg;
+	Type this_arg;
+	Class* element_class;
+	Class* castClass;
+	Class* declaringType;
+	Class* parent;
+	struct Il2CppGenericClass* generic_class;
+	const struct ___Il2CppMetadataTypeHandle* typeMetadataHandle; // non-NULL for Class's constructed from type definitions
+	const struct Il2CppInteropData* interopData;
+	Class* klass; // hack to pretend we are a MonoVTable. Points to ourself
+	// End always valid fields
+
+	// The following fields need initialized before access. This can be done per field or as an aggregate via a call to Class::Init
+	const Field* fields; // Initialized in SetupFields
+	const Event* events; // Initialized in SetupEvents
+	const Property* properties; // Initialized in SetupProperties
+	const Method** methods; // Initialized in SetupMethods
+	Class** nestedTypes; // Initialized in SetupNestedTypes
+	Class** implementedInterfaces; // Initialized in SetupInterfaces
+	struct Il2CppRuntimeInterfaceOffsetPair* interfaceOffsets; // Initialized in Init
+	void* static_fields; // Initialized in Init
+	const struct Il2CppRGCTXData* rgctx_data; // Initialized in Init
+	// used for fast parent checks
+	Class** typeHierarchy; // Initialized in SetupTypeHierachy
+	// End initialization required fields
+
+	void* unity_user_data;
+
+	uint32_t initializationExceptionGCHandle;
+
+	uint32_t cctor_started;
+	uint32_t cctor_finished_or_no_cctor;
+	size_t cctor_thread;
+
+	// Remaining fields are always valid except where noted
+	const struct ___Il2CppMetadataGenericContainerHandle* genericContainerHandle;
+	uint32_t instance_size; // valid when size_inited is true
+	uint32_t stack_slot_size; // valid when size_inited is true
+	uint32_t actualSize;
+	uint32_t element_size;
+	int32_t native_size;
+	uint32_t static_fields_size;
+	uint32_t thread_static_fields_size;
+	int32_t thread_static_fields_offset;
+	uint32_t flags;
+	uint32_t token;
+
+	uint16_t method_count; // lazily calculated for arrays, i.e. when rank > 0
+	uint16_t property_count;
+	uint16_t field_count;
+	uint16_t event_count;
+	uint16_t nested_type_count;
+	uint16_t vtable_count; // lazily calculated for arrays, i.e. when rank > 0
+	uint16_t interfaces_count;
+	uint16_t interface_offsets_count; // lazily calculated for arrays, i.e. when rank > 0
+
+	uint8_t typeHierarchyDepth; // Initialized in SetupTypeHierachy
+	uint8_t genericRecursionDepth;
+	uint8_t rank;
+	uint8_t minimumAlignment; // Alignment of this type
+	uint8_t packingSize;
+
+	// this is critical for performance of Class::InitFromCodegen. Equals to initialized && !initializationExceptionGCHandle at all times.
+	// Use Class::PublishInitialized to update
+	uint8_t initialized_and_no_error : 1;
+
+	uint8_t initialized : 1;
+	uint8_t enumtype : 1;
+	uint8_t nullabletype : 1;
+	uint8_t is_generic : 1;
+	uint8_t has_references : 1; // valid when size_inited is true
+	uint8_t init_pending : 1;
+	uint8_t size_init_pending : 1;
+	uint8_t size_inited : 1;
+	uint8_t has_finalize : 1;
+	uint8_t has_cctor : 1;
+	uint8_t is_blittable : 1;
+	uint8_t is_import_or_windows_runtime : 1;
+	uint8_t is_vtable_initialized : 1;
+	uint8_t is_byref_like : 1;
+	Il2CppVirtualInvokeData vtable[1]; // variable size
+};
+
+} // namespace il2cpp

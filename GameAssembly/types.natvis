@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="il2cpp::Type">
+		<DisplayString>{type}</DisplayString>
+		<Expand>
+			<Item Name="name">(char8_t*)GetName().c_str()</Item>
+			<Item Name="type">type</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Class">
+		<DisplayString>{name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="namespace">namespaze,s8</Item>
+			<Item Name="methods">methods,[method_count]</Item>
+			<Item Name="fields">fields,[field_count]</Item>
+			<Item Name="properties">properties,[property_count]</Item>
+			<Item Name="events">events,[event_count]</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Method">
+		<DisplayString>{name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="parent">klass</Item>
+			<Item Name="parameters">(int)parameters_count</Item>
+			<Item Name="pointer">(void*)methodPointer</Item>
+			<Item Name="return_type">return_type</Item>
+			<Item Name="paremeters">parameters,[parameters_count]</Item>
+			<Item Name="is_static">(flags &amp; METHOD_ATTRIBUTE_STATIC) > 0</Item>
+			<Item Name="is_final">(flags &amp; METHOD_ATTRIBUTE_FINAL) > 0</Item>
+			<Item Name="is_virtual">(flags &amp; METHOD_ATTRIBUTE_VIRTUAL) > 0</Item>
+			<Item Name="is_public">(flags &amp; METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK) == METHOD_ATTRIBUTE_PUBLIC</Item>
+			<Item Name="is_private">(flags &amp; METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK) == METHOD_ATTRIBUTE_PRIVATE</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Field">
+		<DisplayString>{name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="parent">parent</Item>
+			<Item Name="offset">offset</Item>
+			<Item Name="type">type</Item>
+			<Item Name="is_static">(type->attrs &amp; FIELD_ATTRIBUTE_STATIC) != 0</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Property">
+		<DisplayString>{name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="parent">parent</Item>
+			<Item Name="get">get</Item>
+			<Item Name="set">set</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Event">
+		<DisplayString>{name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="parent">parent</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Assembly">
+		<DisplayString>{aname.name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">aname.name,s8</Item>
+			<Item Name="image">image</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="il2cpp::Image">
+		<DisplayString>{name,s8}</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="assembly">assembly</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="System::Object">
+		<DisplayString>{klass->name,s8}</DisplayString>
+		<Expand>
+			<Item Name="[class]">klass</Item>
+
+			<CustomListItems>
+				<Variable Name="i" InitialValue="0" />
+
+				<Loop Condition="i &lt; klass->field_count">
+					<If Condition="(klass->fields[i].type->attrs &amp; il2cpp::Field::FIELD_ATTRIBUTE_STATIC) == 0">
+						<If Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::Boolean">
+							<Item Name="{klass->fields[i].name,s8}">*(bool*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</If>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::Char">
+							<Item Name="{klass->fields[i].name,s8}">*(char16_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::I1">
+							<Item Name="{klass->fields[i].name,s8}">(int)*(int8_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::U1">
+							<Item Name="{klass->fields[i].name,s8}">(int)*(uint8_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::I2">
+							<Item Name="{klass->fields[i].name,s8}">*(int16_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::U2">
+							<Item Name="{klass->fields[i].name,s8}">*(uint16_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::I4">
+							<Item Name="{klass->fields[i].name,s8}">*(int32_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::U4">
+							<Item Name="{klass->fields[i].name,s8}">*(uint32_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::I8">
+							<Item Name="{klass->fields[i].name,s8}">*(int64_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::U8">
+							<Item Name="{klass->fields[i].name,s8}">*(uint64_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::R4">
+							<Item Name="{klass->fields[i].name,s8}">*(float*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::R8">
+							<Item Name="{klass->fields[i].name,s8}">*(double*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::Class">
+							<Item Name="{klass->fields[i].name,s8}">*(System::Object**)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::I">
+							<Item Name="{klass->fields[i].name,s8}">*(int64_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Elseif Condition="klass->fields[i].type->type == il2cpp::Type::Il2CppTypeEnum::U">
+							<Item Name="{klass->fields[i].name,s8}">*(uint64_t*)(((uint8_t*)this) + klass->fields[i].offset)</Item>
+						</Elseif>
+						<Else>
+							<Item Name="{klass->fields[i].name,s8}">klass->fields[i].type->type</Item>
+						</Else>
+					</If>
+					<Exec>i++</Exec>
+				</Loop>
+			</CustomListItems>
+		</Expand>
+	</Type>
+	<Type Name="System::String">
+		<DisplayString>{(char16_t*)(&amp;firstChar),[length]}</DisplayString>
+		<Expand>
+			<Item Name="value">(char16_t*)(&amp;firstChar),[length]</Item>
+			<Item Name="length">length</Item>
+		</Expand>
+	</Type>
+	<Type Name="System::Exception">
+		<DisplayString>{message}</DisplayString>
+		<Expand>
+			<Item Name="[class]">klass</Item>
+			<Item Name="message">message</Item>
+			<Item Name="source">source</Item>
+			<Item Name="stack_trace">stack_trace</Item>
+			<Item Name="inner_ex">inner_ex</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="Il2CppExceptionWrapper">
+		<DisplayString>{*ex}</DisplayString>
+		<Expand>
+			<Item Name="ex">ex</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="UnityEngine::Object">
+		<DisplayString>{klass->name,s8}</DisplayString>
+		<Expand>
+			<ExpandedItem>*(System::Object*)this</ExpandedItem>
+		</Expand>
+	</Type>
+	<Type Name="UnityEngine::GameObject">
+		<DisplayString>{klass->name,s8}</DisplayString>
+		<Expand>
+			<ExpandedItem>*(UnityEngine::Object*)this</ExpandedItem>
+		</Expand>
+	</Type>
+</AutoVisualizer>

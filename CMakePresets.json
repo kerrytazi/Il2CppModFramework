@@ -1,0 +1,59 @@
+﻿{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        //"CMAKE_VERBOSE_MAKEFILE": "ON",
+        "UC_LOADER": "DLL_INJECTOR"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      }
+    },
+    {
+      "name": "client-base",
+      "hidden": true,
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "UC_ENABLE_IMGUI": "ON"
+      }
+    },
+    {
+      "name": "client-debug",
+      "displayName": "Client Debug",
+      "inherits": "client-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "client-release-deb-info",
+      "displayName": "Client RelWithDebInfo",
+      "inherits": "client-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "client-release",
+      "displayName": "Client Release",
+      "inherits": "client-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ]
+}

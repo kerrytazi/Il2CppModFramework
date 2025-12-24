@@ -1,0 +1,370 @@
+#include "pch.hpp"
+
+#include "ImGuiHook.hpp"
+
+#include "common/Log.hpp"
+
+#include "static_lambda/detour_lambda.hpp"
+
+#include "ImDrawDataCopy.hpp"
+
+#include "imgui.h"
+#include "backends/imgui_impl_win32.h"
+#include "backends/imgui_impl_dx11.h"
+
+#include <d3d11.h>
+#include <d3d11_1.h>
+#pragma comment(lib, "d3d11.lib")
+
+extern std::string GetUnityGameWindowName();
+extern int GetImGuiSwitchClientMenuKey();
+extern ImDrawDataCopy g_imgui_draw_data_renderer_copy;
+
+
+static bool ShouldBlockWndEvent(UINT msg)
+{
+	switch (msg)
+	{
+		case WM_MOUSEMOVE:
+		case WM_NCMOUSEMOVE:
+		case WM_MOUSELEAVE:
+		case WM_NCMOUSELEAVE:
+		case WM_INPUT:
+
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONDBLCLK:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONDBLCLK:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONDBLCLK:
+		case WM_XBUTTONDOWN:
+		case WM_XBUTTONDBLCLK:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONUP:
+		case WM_XBUTTONUP:
+		case WM_MOUSEWHEEL:
+		case WM_MOUSEHWHEEL:
+			return true;
+
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+		case WM_SETFOCUS:
+		case WM_KILLFOCUS:
+		case WM_INPUTLANGCHANGE:
+		case WM_CHAR:
+		case WM_SETCURSOR:
+			return true;
+	}
+
+	return false;
+}
+
+
+static std::atomic<bool> g_render_active = false;
+static bool g_client_menu_active = false;
+static RECT g_last_set_clip_rect;
+static std::optional<RECT*> g_last_set_clip_rect_ptr;
+static std::optional<POINT> g_last_set_cursor_pos;
+static POINT g_last_get_cursor_pos;
+
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+
+static WNDPROC g_original_wnd_proc = nullptr;
+
+static LRESULT APIENTRY PatchHwndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+	assert(g_original_wnd_proc);
+
+	if ((msg == WM_KEYDOWN || msg == WM_KEYUP) && wparam == GetImGuiSwitchClientMenuKey())
+	{
+		if (msg == WM_KEYDOWN && (lparam & 0x40000000) == 0)
+			g_client_menu_active = !g_client_menu_active;
+
+		return 1;
+	}
+
+	if (g_render_active && ImGui::GetCurrentContext())
+	{
+		if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
+			return DefWindowProcW(hwnd, msg, wparam, lparam);
+
+		if (ShouldBlockWndEvent(msg))
+			return 1;
+	}
+
+	return CallWindowProcW(g_original_wnd_proc, hwnd, msg, wparam, lparam);
+}
+
+void ImGuiInitBasic(HWND hwnd)
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+
+	ImGui_ImplWin32_EnableDpiAwareness();
+	float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+	style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+
+	ImGui_ImplWin32_Init(hwnd);
+}
+
+
+static HWND g_hwnd = nullptr;
+static std::atomic<bool> g_imgui_initialized = false;
+
+static std::unique_ptr<sl::detour<HRESULT __stdcall (IDXGISwapChain*, UINT, UINT)>> g_d3d11_present_detour;
+static std::unique_ptr<sl::detour<BOOL WINAPI(const RECT*)>> g_clip_cursor_detour;
+static std::unique_ptr<sl::detour<BOOL WINAPI(int, int)>> g_set_cursor_pos_detour;
+static std::unique_ptr<sl::detour<BOOL WINAPI(LPPOINT)>> g_get_cursor_pos_detour;
+
+void ImGuiHook::LoadD3D11()
+{
+	Log::Debug("ImGuiHook::LoadD3D11()");
+
+	g_hwnd = FindWindowA(nullptr, GetUnityGameWindowName().c_str());
+
+	Log::Debug("g_hwnd: " + std::format("{:#016x}", (uint64_t)g_hwnd));
+
+	ImGuiInitBasic(g_hwnd);
+
+	void** pSwapChainVTable = nullptr;
+
+	{
+		HINSTANCE hinstance = GetModuleHandle(NULL);
+		WNDCLASSEXW wc{};
+		wc.cbSize = sizeof(WNDCLASSEXW);
+		wc.style = CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc = &DefWindowProcW;
+		wc.hInstance = hinstance;
+		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.lpszClassName = L"ImGuiHook_Class";
+		RegisterClassExW(&wc);
+
+		HWND hwnd = CreateWindowExW(0, L"ImGuiHook_Class", L"ImGuiHook",
+							WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+							1, 1, NULL, NULL, hinstance, NULL);
+
+		D3D_FEATURE_LEVEL levels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1 };
+		D3D_FEATURE_LEVEL obtainedLevel;
+		DXGI_SWAP_CHAIN_DESC sd{};
+
+		sd.BufferCount = 1;
+		sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+		sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		sd.OutputWindow = hwnd;
+		sd.SampleDesc.Count = 1;
+		sd.Windowed = true;
+		sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+		sd.BufferDesc.Width = 1;
+		sd.BufferDesc.Height = 1;
+		sd.BufferDesc.RefreshRate.Numerator = 0;
+		sd.BufferDesc.RefreshRate.Denominator = 1;
+
+		ID3D11Device* pd3dDevice = nullptr;
+		ID3D11DeviceContext* pd3dContext = nullptr;
+		IDXGISwapChain* pSwapChain = nullptr;
+
+		if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, levels, sizeof(levels) / sizeof(D3D_FEATURE_LEVEL), D3D11_SDK_VERSION, &sd, &pSwapChain, &pd3dDevice, &obtainedLevel, &pd3dContext)))
+		{
+			Log::Error("Failed to create device and swapchain");
+			return;
+		}
+
+		pSwapChainVTable = ((void***)pSwapChain)[0];
+
+		pd3dDevice->Release();
+		pd3dContext->Release();
+		pSwapChain->Release();
+
+		DestroyWindow(hwnd);
+	}
+
+	g_clip_cursor_detour = std::make_unique<sl::detour<BOOL WINAPI(const RECT*)>>(&ClipCursor, [](const RECT *lpRect, auto original) -> BOOL {
+		if (g_render_active)
+		{
+			if (lpRect)
+			{
+				g_last_set_clip_rect = *lpRect;
+				g_last_set_clip_rect_ptr = &g_last_set_clip_rect;
+			}
+			else
+			{
+				g_last_set_clip_rect_ptr = nullptr;
+			}
+
+			return TRUE;
+		}
+
+		return original(lpRect);
+	});
+
+	g_set_cursor_pos_detour = std::make_unique<sl::detour<BOOL WINAPI(int, int)>>(&SetCursorPos, [](int X, int Y, auto original) -> BOOL {
+		if (g_render_active)
+		{
+			g_last_set_cursor_pos = POINT{ X, Y };
+			return TRUE;
+		}
+
+		return original(X, Y);
+	});
+
+	g_get_cursor_pos_detour = std::make_unique<sl::detour<BOOL WINAPI(LPPOINT)>>(&GetCursorPos, [](LPPOINT lpPoint, auto original) -> BOOL {
+		if (g_render_active)
+		{
+			*lpPoint = g_last_get_cursor_pos;
+			return TRUE;
+		}
+
+		return original(lpPoint);
+	});
+
+	g_original_wnd_proc = (WNDPROC)SetWindowLongPtrW(g_hwnd, GWLP_WNDPROC, (LONG_PTR)&PatchHwndProc);
+
+	g_d3d11_present_detour = std::make_unique<sl::detour<HRESULT __stdcall (IDXGISwapChain*, UINT, UINT)>>(pSwapChainVTable[8], [](IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags, auto original) {
+		if (g_render_active || !g_imgui_initialized)
+		{
+			ID3D11Device* pd3dDevice = nullptr;
+			ID3D11DeviceContext* pd3dContext = nullptr;
+
+			pSwapChain->GetDevice(__uuidof(pd3dDevice), (void**)&pd3dDevice);
+			pd3dDevice->GetImmediateContext(&pd3dContext);
+
+			if (!g_imgui_initialized)
+			{
+				g_imgui_initialized = true;
+				ImGui_ImplDX11_Init(pd3dDevice, pd3dContext);
+			}
+
+			ID3D11RenderTargetView* pOriginalRTV = nullptr;
+			ID3D11DepthStencilView* pOriginalDSV = nullptr;
+			pd3dContext->OMGetRenderTargets(1, &pOriginalRTV, &pOriginalDSV);
+
+			ID3D11Texture2D* pBackBuffer = nullptr;
+			if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer)))
+			{
+				ID3D11RenderTargetView* pMainRTV = nullptr;
+				if (SUCCEEDED(pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &pMainRTV)))
+				{
+					pd3dContext->OMSetRenderTargets(1, &pMainRTV, nullptr);
+
+
+					ImGui_ImplDX11_NewFrame();
+					ImGui_ImplDX11_RenderDrawData(&*g_imgui_draw_data_renderer_copy.Locked());
+
+
+					pMainRTV->Release();
+				}
+				else
+				{
+					Log::Error("CreateRenderTargetView failed");
+				}
+
+				pBackBuffer->Release();
+			}
+			else
+			{
+				Log::Error("pSwapChain->GetBuffer 0 failed");
+			}
+
+			pd3dContext->OMSetRenderTargets(1, &pOriginalRTV, pOriginalDSV);
+
+			if (pOriginalRTV)
+				pOriginalRTV->Release();
+
+			if (pOriginalDSV)
+				pOriginalDSV->Release();
+
+			pd3dDevice->Release();
+			pd3dContext->Release();
+		}
+
+		return original(pSwapChain, SyncInterval, Flags);
+	});
+}
+
+void ImGuiHook::UnloadD3D11()
+{
+	Log::Debug("ImGuiHook::UnloadD3D11()");
+
+	SetRenderActive(false);
+
+	SetWindowLongPtrW(g_hwnd, GWLP_WNDPROC, (LONG_PTR)g_original_wnd_proc);
+
+	g_d3d11_present_detour.reset();
+	g_clip_cursor_detour.reset();
+	g_set_cursor_pos_detour.reset();
+	g_get_cursor_pos_detour.reset();
+
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+}
+
+void ImGuiHook::NewFrame()
+{
+	ImGui_ImplWin32_NewFrame();
+}
+
+void ImGuiHook::SetRenderActive(bool active)
+{
+	bool prev_show = g_render_active;
+
+	if (active == prev_show)
+		return;
+
+	if (!prev_show)
+	{
+		if (GetClipCursor(&g_last_set_clip_rect))
+			g_last_set_clip_rect_ptr = &g_last_set_clip_rect;
+
+		ClipCursor(nullptr);
+		GetCursorPos(&g_last_get_cursor_pos);
+	}
+
+	g_render_active = !prev_show;
+
+	if (prev_show)
+	{
+		if (g_last_set_clip_rect_ptr.has_value())
+		{
+			ClipCursor(*g_last_set_clip_rect_ptr);
+			g_last_set_clip_rect_ptr = std::nullopt;
+		}
+
+		if (g_last_set_cursor_pos.has_value())
+		{
+			SetCursorPos(g_last_set_cursor_pos->x, g_last_set_cursor_pos->y);
+			g_last_set_cursor_pos = std::nullopt;
+		}
+	}
+
+	ShowCursor(prev_show ? FALSE : TRUE);
+}
+
+bool ImGuiHook::IsClientMenuActive()
+{
+	return g_client_menu_active;
+}
+
+bool ImGuiHook::IsFullyInitialized()
+{
+	return g_imgui_initialized;
+}
