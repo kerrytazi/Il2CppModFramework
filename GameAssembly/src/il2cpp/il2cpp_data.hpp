@@ -14,6 +14,10 @@ namespace il2cpp
 
 class Domain;
 class Class;
+class Method;
+class Field;
+class Property;
+class Event;
 class Assembly;
 class Image;
 class Type;
@@ -45,6 +49,10 @@ struct MyIl2CppData
 	void (*il2cpp_free)(void* ptr);
 	System::String* (*il2cpp_string_new)(const char* str, int32_t len);
 	System::String* (*il2cpp_string_new_utf16)(const char16_t* str, int32_t len);
+	il2cpp::Method* (*il2cpp_class_get_methods)(il2cpp::Class* klass, void** iter);
+	il2cpp::Field* (*il2cpp_class_get_fields)(il2cpp::Class* klass, void** iter);
+	il2cpp::Property* (*il2cpp_class_get_properties)(il2cpp::Class* klass, void** iter);
+	il2cpp::Event* (*il2cpp_class_get_events)(il2cpp::Class* klass, void** iter);
 
 	std::vector<CachedClass> cached_classes;
 	std::unordered_map<const il2cpp::Type*, std::string> cached_type_names;

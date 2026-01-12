@@ -23,6 +23,11 @@ static size_t GetTotalClassesCount()
 
 static void Il2CppInitCaches()
 {
+	assert(g_il2cpp_data.il2cpp_class_get_methods);
+	assert(g_il2cpp_data.il2cpp_class_get_fields);
+	assert(g_il2cpp_data.il2cpp_class_get_properties);
+	assert(g_il2cpp_data.il2cpp_class_get_events);
+
 	Log::Debug("Il2CppInitCaches");
 
 	g_il2cpp_data.cached_classes.reserve(GetTotalClassesCount());
@@ -39,6 +44,12 @@ static void Il2CppInitCaches()
 			cklass.namespaze = kfull_name.namespaze;
 			cklass.name = kfull_name.name;
 			cklass.klass = klass;
+
+			// Call each get at least once to initialize them
+			{ void* iter = nullptr; g_il2cpp_data.il2cpp_class_get_methods((il2cpp::Class*)klass, &iter); }
+			{ void* iter = nullptr; g_il2cpp_data.il2cpp_class_get_fields((il2cpp::Class*)klass, &iter); }
+			{ void* iter = nullptr; g_il2cpp_data.il2cpp_class_get_properties((il2cpp::Class*)klass, &iter); }
+			{ void* iter = nullptr; g_il2cpp_data.il2cpp_class_get_events((il2cpp::Class*)klass, &iter); }
 		}
 	}
 }
