@@ -44,11 +44,26 @@ void _UnloadLibraryFromThread()
 	FreeLibraryAndExitThread(g_dll_instance, 0);
 }
 
+static std::string g_exe_path;
+static std::string g_exe_dir;
+
+const std::string& GetExePath() { return g_exe_path; }
+const std::string& GetExeDir() { return g_exe_dir; }
+
+static void InitExePath()
+{
+	char buffer[MAX_PATH];
+	GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+	g_exe_path = buffer;
+	g_exe_dir = std::filesystem::path(g_exe_path).parent_path().string();
+}
+
 BOOL APIENTRY Bootstrap(HMODULE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	switch (fdwReason)
 	{
 		case DLL_PROCESS_ATTACH:
+			InitExePath();
 			g_dll_instance = hinstDLL;
 
 			g_logger_manager_storage = std::make_unique<LoggerManager>();

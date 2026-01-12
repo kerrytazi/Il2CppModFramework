@@ -16,10 +16,103 @@
 #include <d3d11_1.h>
 #pragma comment(lib, "d3d11.lib")
 
-extern std::string GetUnityGameWindowName();
-extern int GetImGuiSwitchClientMenuKey();
 extern ImDrawDataCopy g_imgui_draw_data_renderer_copy;
+extern const std::string& GetExeDir();
 
+struct WindowData
+{
+	DWORD targetProcessId;
+	HWND foundWindow;
+};
+
+static bool IsConsoleWindow(HWND hwnd)
+{
+	const int MAX_CLASS_NAME = 256;
+	WCHAR className[MAX_CLASS_NAME];
+
+	if (GetClassNameW(hwnd, className, MAX_CLASS_NAME) > 0)
+		return wcscmp(className, L"ConsoleWindowClass") == 0;
+
+	return false;
+}
+
+static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+	auto data = reinterpret_cast<WindowData*>(lParam);
+
+	DWORD processId = 0;
+	GetWindowThreadProcessId(hwnd, &processId);
+
+	if (processId == data->targetProcessId)
+	{
+		if (IsWindowVisible(hwnd) && GetWindowTextLength(hwnd) > 0 && !IsConsoleWindow(hwnd))
+		{
+			data->foundWindow = hwnd;
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static HWND FindFirstWindowForProcess(DWORD processId)
+{
+	WindowData data;
+	data.targetProcessId = processId;
+	data.foundWindow = NULL;
+
+	EnumWindows(&EnumWindowsProc, reinterpret_cast<LPARAM>(&data));
+
+	return data.foundWindow;
+}
+
+#pragma comment(linker, "/alternatename:GetUnityGameWindow=DefaultGetUnityGameWindow")
+extern "C" HWND GetUnityGameWindow();
+extern "C" HWND DefaultGetUnityGameWindow()
+{
+	return FindFirstWindowForProcess(GetCurrentProcessId());
+}
+
+#pragma comment(linker, "/alternatename:GetImGuiIniFilename=DefaultGetImGuiIniFilename")
+extern "C" const char* GetImGuiIniFilename();
+extern "C" const char* DefaultGetImGuiIniFilename()
+{
+	return "config/imgui.ini";
+}
+
+#pragma comment(linker, "/alternatename:GetImGuiLogFilename=DefaultGetImGuiLogFilename")
+extern "C" const char* GetImGuiLogFilename();
+extern "C" const char* DefaultGetImGuiLogFilename()
+{
+	return "client/imgui.log";
+}
+
+#pragma comment(linker, "/alternatename:GetImGuiSwitchClientMenuKey=DefaultGetImGuiSwitchClientMenuKey")
+extern "C" int GetImGuiSwitchClientMenuKey();
+extern "C" int DefaultGetImGuiSwitchClientMenuKey()
+{
+	return VK_INSERT;
+}
+
+
+static std::string g_ini_path;
+static std::string g_log_path;
+
+static const std::string& GetIniPath()
+{
+	if (g_ini_path.empty() && GetImGuiIniFilename() != nullptr)
+		g_ini_path = GetExeDir() + "/" + GetImGuiIniFilename();
+
+	return g_ini_path;
+}
+
+static const std::string& GetLogPath()
+{
+	if (g_ini_path.empty() && GetImGuiLogFilename() != nullptr)
+		g_ini_path = GetExeDir() + "/" + GetImGuiLogFilename();
+
+	return g_log_path;
+}
 
 static bool ShouldBlockWndEvent(UINT msg)
 {
@@ -107,6 +200,15 @@ void ImGuiInitBasic(HWND hwnd)
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
+	io.IniFilename = nullptr;
+	io.LogFilename = nullptr;
+
+	if (!GetLogPath().empty())
+		io.LogFilename = GetLogPath().c_str();
+
+	if (!GetIniPath().empty())
+		ImGui::LoadIniSettingsFromDisk(GetIniPath().c_str());
+
 	ImGui::StyleColorsDark();
 	//ImGui::StyleColorsLight();
 
@@ -133,7 +235,7 @@ void ImGuiHook::LoadD3D11()
 {
 	Log::Debug("ImGuiHook::LoadD3D11()");
 
-	g_hwnd = FindWindowA(nullptr, GetUnityGameWindowName().c_str());
+	g_hwnd = GetUnityGameWindow();
 
 	Log::Debug("g_hwnd: " + std::format("{:#016x}", (uint64_t)g_hwnd));
 
@@ -315,6 +417,13 @@ void ImGuiHook::UnloadD3D11()
 
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
+
+	if (!GetIniPath().empty())
+	{
+		std::filesystem::create_directories(std::filesystem::path(GetIniPath()).parent_path());
+		ImGui::SaveIniSettingsToDisk(GetIniPath().c_str());
+	}
+
 	ImGui::DestroyContext();
 }
 

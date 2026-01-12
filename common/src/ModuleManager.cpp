@@ -111,11 +111,27 @@ void ModuleManager::PostUpdate()
 		module->PostUpdate();
 }
 
-std::string GetConfigPath();
+#pragma comment(linker, "/alternatename:GetConfigPath=DefaultGetConfigPath")
+extern "C" const char* GetConfigPath();
+extern "C" const char* DefaultGetConfigPath()
+{
+	return "client/config.json";
+}
+
+extern const std::string& GetExeDir();
+static std::string g_config_path;
+
+static const std::string& GetFullConfigPath()
+{
+	if (g_config_path.empty() && GetConfigPath() != nullptr)
+		g_config_path = GetExeDir() + "/" + GetConfigPath();
+
+	return g_config_path;
+}
 
 void ModuleManager::LoadConfig()
 {
-	auto path = GetConfigPath();
+	auto path = GetFullConfigPath();
 
 	if (path.empty())
 		return;
@@ -136,12 +152,12 @@ void ModuleManager::LoadConfig()
 
 void ModuleManager::SaveConfig()
 {
-	auto path = GetConfigPath();
+	auto path = GetFullConfigPath();
 
 	if (path.empty())
 		return;
 
-	auto path_tmp = path + ".tmp";
+	auto path_tmp = std::string(path) + ".tmp";
 	auto doc = nlohmann::json::object();
 
 	for (const auto& module : modules_)
