@@ -8,6 +8,25 @@
 		</Expand>
 	</Type>
 
+	<!--
+	<Type Name="il2cpp::Class">
+		<DisplayString Condition="initialized">{name,s8}</DisplayString>
+		<DisplayString Condition="!initialized">{name,s8} [Not Initialized]</DisplayString>
+		<Expand>
+			<Item Name="name">name,s8</Item>
+			<Item Name="namespace">namespaze,s8</Item>
+			<Item Name="methods" Condition="initialized">methods,[method_count]</Item>
+			<Item Name="methods" Condition="!initialized">"[Not Initialized]"</Item>
+			<Item Name="fields" Condition="initialized">fields,[field_count]</Item>
+			<Item Name="fields" Condition="!initialized">"[Not Initialized]"</Item>
+			<Item Name="properties" Condition="initialized">properties,[property_count]</Item>
+			<Item Name="properties" Condition="!initialized">"[Not Initialized]"</Item>
+			<Item Name="events" Condition="initialized">events,[event_count]</Item>
+			<Item Name="events" Condition="!initialized">"[Not Initialized]"</Item>
+		</Expand>
+	</Type>
+	-->
+
 	<Type Name="il2cpp::Class">
 		<DisplayString>{name,s8}</DisplayString>
 		<Expand>

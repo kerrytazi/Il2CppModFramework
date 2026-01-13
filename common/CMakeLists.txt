@@ -3,7 +3,7 @@ project("common")
 
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/config_common.cmake")
 
-config_common(common STATIC "${CMAKE_CURRENT_LIST_DIR}" "${CMAKE_CURRENT_LIST_DIR}/..")
+config_common(common STATIC)
 
 if(NOT UC_ENABLE_IMGUI)
 	set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/src/ImGuiHook.cpp" PROPERTIES HEADER_FILE_ONLY TRUE)

@@ -3,6 +3,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/config_flags.cmake")
 cmake_policy(SET CMP0079 NEW)
 
 function(add_autogen project_target root_dir)
+	message(STATUS "Adding autogen for ${project_target}")
+
 	get_target_property(target_sources ${project_target} SOURCES)
 
 	set(header_files "")

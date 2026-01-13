@@ -4,8 +4,11 @@
 #include "il2cpp/Class.hpp"
 #include "il2cpp/Type.hpp"
 
+#include "common/Log.hpp"
+
 #include "il2cpp_data.hpp"
 
+#include "il2cpp/Image.hpp"
 const il2cpp::Method* il2cpp::Method::Find(
 	std::string_view namespaze,
 	std::string_view class_name,
@@ -14,10 +17,15 @@ const il2cpp::Method* il2cpp::Method::Find(
 	std::initializer_list<std::string_view> param_types,
 	std::optional<bool> is_static /*= std::nullopt*/)
 {
-	assert(g_il2cpp_data.GameAssembly);
-
 	if (auto klass = Class::Find(namespaze, class_name))
 	{
+		// FIXME!!!
+		//if (!klass->IsInitialized())
+		//{
+		//	Log::Warn("Method::Find() failed: klass found but not initialized: " + std::string(class_name) + "::" + std::string(method_name) + ". This should never happen. Report to Developer.");
+		//	return nullptr;
+		//}
+
 		for (auto method : klass->GetMethods())
 		{
 			if (method->GetParametersCount() != param_types.size())

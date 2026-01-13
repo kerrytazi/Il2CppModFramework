@@ -3,8 +3,8 @@
 namespace ImGuiHook
 {
 
-void LoadD3D11();
-void UnloadD3D11();
+bool Load();
+bool Unload();
 void NewFrame();
 
 void SetRenderActive(bool active);

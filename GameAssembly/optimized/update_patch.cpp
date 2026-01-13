@@ -10,13 +10,14 @@
 #include <stdexcept>
 #include <ranges>
 
-static std::unique_ptr<sl::detour<int64_t()>> g_player_loop_detour;
+static std::optional<sl::detour<int64_t()>> g_player_loop_detour;
 
 struct FriendIl2CppOnUpdate
 {
 	static void PatchPlayerLoop(int64_t(*update_func)())
 	{
-		g_player_loop_detour = std::make_unique<sl::detour<int64_t()>>(update_func, [](auto original) {
+		g_player_loop_detour.emplace(update_func, [](auto original) {
+
 			if (g_module_manager)
 				g_module_manager->OnPreUpdate();
 

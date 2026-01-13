@@ -3,12 +3,74 @@
 #include "ImGuiHook.hpp"
 
 #include "common/Log.hpp"
+#include "common/StringUtils.hpp"
+#include "UnityEngine/SystemInfo.hpp"
 
 #include "static_lambda/detour_lambda.hpp"
 
 #include "ImDrawDataCopy.hpp"
 
 #include "imgui.h"
+
+#pragma comment(linker, "/alternatename:GetImGuiIniFilename=DefaultGetImGuiIniFilename")
+extern "C" const char* GetImGuiIniFilename();
+extern "C" const char* DefaultGetImGuiIniFilename()
+{
+	return "config/imgui.ini";
+}
+
+#pragma comment(linker, "/alternatename:GetImGuiLogFilename=DefaultGetImGuiLogFilename")
+extern "C" const char* GetImGuiLogFilename();
+extern "C" const char* DefaultGetImGuiLogFilename()
+{
+	return "client/imgui.log";
+}
+
+extern const std::string& GetExeDir();
+
+static std::string g_ini_path;
+static std::string g_log_path;
+
+static const std::string& GetIniPath()
+{
+	if (g_ini_path.empty() && GetImGuiIniFilename() != nullptr)
+		g_ini_path = GetExeDir() + "/" + GetImGuiIniFilename();
+
+	return g_ini_path;
+}
+
+static const std::string& GetLogPath()
+{
+	if (g_ini_path.empty() && GetImGuiLogFilename() != nullptr)
+		g_ini_path = GetExeDir() + "/" + GetImGuiLogFilename();
+
+	return g_log_path;
+}
+
+static void ImGuiInitBasic()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+	io.IniFilename = nullptr;
+	io.LogFilename = nullptr;
+
+	if (!GetLogPath().empty())
+		io.LogFilename = GetLogPath().c_str();
+
+	if (!GetIniPath().empty())
+		ImGui::LoadIniSettingsFromDisk(GetIniPath().c_str());
+
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+}
+
+
+#ifdef _WIN32
+
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx11.h"
 
@@ -17,7 +79,6 @@
 #pragma comment(lib, "d3d11.lib")
 
 extern ImDrawDataCopy g_imgui_draw_data_renderer_copy;
-extern const std::string& GetExeDir();
 
 struct WindowData
 {
@@ -73,45 +134,11 @@ extern "C" HWND DefaultGetUnityGameWindow()
 	return FindFirstWindowForProcess(GetCurrentProcessId());
 }
 
-#pragma comment(linker, "/alternatename:GetImGuiIniFilename=DefaultGetImGuiIniFilename")
-extern "C" const char* GetImGuiIniFilename();
-extern "C" const char* DefaultGetImGuiIniFilename()
-{
-	return "config/imgui.ini";
-}
-
-#pragma comment(linker, "/alternatename:GetImGuiLogFilename=DefaultGetImGuiLogFilename")
-extern "C" const char* GetImGuiLogFilename();
-extern "C" const char* DefaultGetImGuiLogFilename()
-{
-	return "client/imgui.log";
-}
-
 #pragma comment(linker, "/alternatename:GetImGuiSwitchClientMenuKey=DefaultGetImGuiSwitchClientMenuKey")
 extern "C" int GetImGuiSwitchClientMenuKey();
 extern "C" int DefaultGetImGuiSwitchClientMenuKey()
 {
 	return VK_INSERT;
-}
-
-
-static std::string g_ini_path;
-static std::string g_log_path;
-
-static const std::string& GetIniPath()
-{
-	if (g_ini_path.empty() && GetImGuiIniFilename() != nullptr)
-		g_ini_path = GetExeDir() + "/" + GetImGuiIniFilename();
-
-	return g_ini_path;
-}
-
-static const std::string& GetLogPath()
-{
-	if (g_ini_path.empty() && GetImGuiLogFilename() != nullptr)
-		g_ini_path = GetExeDir() + "/" + GetImGuiLogFilename();
-
-	return g_log_path;
 }
 
 static bool ShouldBlockWndEvent(UINT msg)
@@ -192,36 +219,6 @@ static LRESULT APIENTRY PatchHwndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
 	return CallWindowProcW(g_original_wnd_proc, hwnd, msg, wparam, lparam);
 }
 
-void ImGuiInitBasic(HWND hwnd)
-{
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-	io.IniFilename = nullptr;
-	io.LogFilename = nullptr;
-
-	if (!GetLogPath().empty())
-		io.LogFilename = GetLogPath().c_str();
-
-	if (!GetIniPath().empty())
-		ImGui::LoadIniSettingsFromDisk(GetIniPath().c_str());
-
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsLight();
-
-	ImGui_ImplWin32_EnableDpiAwareness();
-	float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
-
-	ImGuiStyle& style = ImGui::GetStyle();
-	style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-	style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
-
-	ImGui_ImplWin32_Init(hwnd);
-}
-
 
 static HWND g_hwnd = nullptr;
 static std::atomic<bool> g_imgui_initialized = false;
@@ -231,15 +228,32 @@ static std::unique_ptr<sl::detour<BOOL WINAPI(const RECT*)>> g_clip_cursor_detou
 static std::unique_ptr<sl::detour<BOOL WINAPI(int, int)>> g_set_cursor_pos_detour;
 static std::unique_ptr<sl::detour<BOOL WINAPI(LPPOINT)>> g_get_cursor_pos_detour;
 
-void ImGuiHook::LoadD3D11()
+static bool LoadD3D11()
 {
-	Log::Debug("ImGuiHook::LoadD3D11()");
+	Log::Debug("LoadD3D11()");
 
 	g_hwnd = GetUnityGameWindow();
 
 	Log::Debug("g_hwnd: " + std::format("{:#016x}", (uint64_t)g_hwnd));
 
-	ImGuiInitBasic(g_hwnd);
+	if (!g_hwnd)
+	{
+		Log::Error("Can't find window");
+		return false;
+	}
+
+	ImGuiInitBasic();
+
+#ifdef _WIN32
+	ImGui_ImplWin32_EnableDpiAwareness();
+	float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+	style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+
+	ImGui_ImplWin32_Init(g_hwnd);
+#endif // _WIN32
 
 	void** pSwapChainVTable = nullptr;
 
@@ -287,7 +301,7 @@ void ImGuiHook::LoadD3D11()
 		if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, levels, sizeof(levels) / sizeof(D3D_FEATURE_LEVEL), D3D11_SDK_VERSION, &sd, &pSwapChain, &pd3dDevice, &obtainedLevel, &pd3dContext)))
 		{
 			Log::Error("Failed to create device and swapchain");
-			return;
+			return false;
 		}
 
 		pSwapChainVTable = ((void***)pSwapChain)[0];
@@ -400,13 +414,15 @@ void ImGuiHook::LoadD3D11()
 
 		return original(pSwapChain, SyncInterval, Flags);
 	});
+
+	return true;
 }
 
-void ImGuiHook::UnloadD3D11()
+static void UnloadD3D11()
 {
-	Log::Debug("ImGuiHook::UnloadD3D11()");
+	Log::Debug("UnloadD3D11()");
 
-	SetRenderActive(false);
+	ImGuiHook::SetRenderActive(false);
 
 	SetWindowLongPtrW(g_hwnd, GWLP_WNDPROC, (LONG_PTR)g_original_wnd_proc);
 
@@ -417,6 +433,45 @@ void ImGuiHook::UnloadD3D11()
 
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
+}
+
+#endif // _WIN32
+
+bool ImGuiHook::Load()
+{
+	auto type = UnityEngine::SystemInfo::GetGraphicsDeviceType();
+
+	switch (type)
+	{
+#ifdef _WIN32
+		case UnityEngine::Rendering::GraphicsDeviceType::Direct3D11:
+			if (!LoadD3D11())
+				return false;
+			break;
+#endif // _WIN32
+		default:
+			Log::Error("ImGuiHook::Load(): ImGui is not implemented for: " + su::u8((int)type));
+			return false;
+	}
+
+	return true;
+}
+
+bool ImGuiHook::Unload()
+{
+	auto type = UnityEngine::SystemInfo::GetGraphicsDeviceType();
+
+	switch (type)
+	{
+#ifdef _WIN32
+		case UnityEngine::Rendering::GraphicsDeviceType::Direct3D11:
+			UnloadD3D11();
+			break;
+#endif // _WIN32
+		default:
+			Log::Error("ImGuiHook::Unload(): ImGui is not implemented for: " + su::u8((int)type));
+			return false;
+	}
 
 	if (!GetIniPath().empty())
 	{
@@ -425,11 +480,15 @@ void ImGuiHook::UnloadD3D11()
 	}
 
 	ImGui::DestroyContext();
+
+	return true;
 }
 
 void ImGuiHook::NewFrame()
 {
+#ifdef _WIN32
 	ImGui_ImplWin32_NewFrame();
+#endif // _WIN32
 }
 
 void ImGuiHook::SetRenderActive(bool active)
@@ -439,6 +498,7 @@ void ImGuiHook::SetRenderActive(bool active)
 	if (active == prev_show)
 		return;
 
+#ifdef _WIN32
 	if (!prev_show)
 	{
 		if (GetClipCursor(&g_last_set_clip_rect))
@@ -447,9 +507,11 @@ void ImGuiHook::SetRenderActive(bool active)
 		ClipCursor(nullptr);
 		GetCursorPos(&g_last_get_cursor_pos);
 	}
+#endif // _WIN32
 
 	g_render_active = !prev_show;
 
+#ifdef _WIN32
 	if (prev_show)
 	{
 		if (g_last_set_clip_rect_ptr.has_value())
@@ -466,6 +528,7 @@ void ImGuiHook::SetRenderActive(bool active)
 	}
 
 	ShowCursor(prev_show ? FALSE : TRUE);
+#endif // _WIN32
 }
 
 bool ImGuiHook::IsClientMenuActive()
@@ -475,5 +538,7 @@ bool ImGuiHook::IsClientMenuActive()
 
 bool ImGuiHook::IsFullyInitialized()
 {
+#ifdef _WIN32
 	return g_imgui_initialized;
+#endif // _WIN32
 }

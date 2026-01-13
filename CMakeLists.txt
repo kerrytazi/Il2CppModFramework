@@ -16,8 +16,9 @@ reset_all_flags()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tools/autogen" "tools/autogen" EXCLUDE_FROM_ALL)
+
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/common" "common" EXCLUDE_FROM_ALL)
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/GameAssembly" "GameAssembly" EXCLUDE_FROM_ALL)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/debuggers/StackTracer" "debuggers/StackTracer" EXCLUDE_FROM_ALL)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/static_lambda" "libs/static_lambda" EXCLUDE_FROM_ALL)
 set_common_flags(static_lambda)
@@ -36,9 +37,6 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/json" "libs/json" EXCLUDE_FROM_
 if(UC_ENABLE_IMGUI)
 	add_imgui(${CMAKE_CURRENT_LIST_DIR})
 endif()
-
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tools/autogen" "tools/autogen" EXCLUDE_FROM_ALL)
-add_autogen(GameAssembly ${CMAKE_CURRENT_LIST_DIR})
 
 file(GLOB CLIENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/clients/*")
 foreach(CLIENT_DIR ${CLIENT_DIRS})

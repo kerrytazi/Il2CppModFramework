@@ -38,7 +38,18 @@ void MyIl2CppData::Init()
 	init_func(il2cpp_type_get_name);
 	init_func(il2cpp_free);
 	init_func(il2cpp_string_new);
+	init_func(il2cpp_string_new_utf16);
+
+	init_func(il2cpp_class_get_method_from_name);
 	init_func(il2cpp_init);
+	init_func(il2cpp_domain_get);
+	init_func(il2cpp_assembly_get_image);
+	init_func(il2cpp_class_get_methods);
+	init_func(il2cpp_class_get_fields);
+	init_func(il2cpp_class_get_properties);
+	init_func(il2cpp_class_get_events);
+	init_func(il2cpp_class_from_type);
+	init_func(il2cpp_class_get_type);
 	#undef init_func
 
 	cached_type_names.reserve(16 * 1024);

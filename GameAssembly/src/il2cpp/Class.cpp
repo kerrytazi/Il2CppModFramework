@@ -9,6 +9,20 @@
 
 #include "il2cpp_data.hpp"
 
+#if !defined(UC_UNITY_VERSION_NUM)
+#error UC_UNITY_VERSION_NUM is not defined
+#endif
+
+std::string_view il2cpp::Class::GetName() const
+{
+	return name;
+}
+
+std::string_view il2cpp::Class::GetNamespace() const
+{
+	return namespaze;
+}
+
 std::span<const il2cpp::Method*> il2cpp::Class::GetMethods() const
 {
 	return std::span(methods, method_count);
@@ -39,4 +53,9 @@ const il2cpp::Class* il2cpp::Class::Find(std::string_view namespaze, std::string
 		return nullptr;
 
 	return cit->klass;
+}
+
+bool il2cpp::Class::IsInitialized() const
+{
+	return initialized;
 }

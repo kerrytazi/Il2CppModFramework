@@ -26,7 +26,8 @@ Copy `clients/example` to `clients/my-mod`.
 
 Edit `CMakeLists.txt`:
 - `project("my_mod")`
-- `config_client(my_mod ...`
+- `set(UC_UNITY_VERSION 2021.3.56f2)`
+- `config_client(my_mod)`
 
 Edit `src/dllmain.cpp`:
 - `GetConfigPath` - relative path *(from exe)* to mod settings.

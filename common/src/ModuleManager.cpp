@@ -7,7 +7,6 @@
 #include "common/Log.hpp"
 
 #include "common/StringUtils.hpp"
-#include "UnityEngine/SystemInfo.hpp"
 
 #ifdef UC_ENABLE_IMGUI
 #include "ImGuiHook.hpp"
@@ -257,36 +256,20 @@ void ModuleManager::LoadImGui()
 {
 	assert(!use_imgui_);
 
-	auto type = UnityEngine::SystemInfo::GetGraphicsDeviceType();
-
-	switch (type)
-	{
-		case UnityEngine::Rendering::GraphicsDeviceType::Direct3D11:
-			ImGuiHook::LoadD3D11();
-			break;
-		default:
-			Log::Warn("ModuleManager::UseImGui(): ImGui is not implemented for: " + su::u8((int)type));
-			return;
-	}
-
-	use_imgui_ = true;
+	if (ImGuiHook::Load())
+		use_imgui_ = true;
+	else
+		Log::Error("ModuleManager::LoadImGui() failed");
 }
 
 void ModuleManager::UnloadImGui()
 {
-	auto type = UnityEngine::SystemInfo::GetGraphicsDeviceType();
+	assert(use_imgui_);
 
-	switch (type)
-	{
-		case UnityEngine::Rendering::GraphicsDeviceType::Direct3D11:
-			ImGuiHook::UnloadD3D11();
-			break;
-		default:
-			Log::Warn("ModuleManager::UnloadImGui(): ImGui is not implemented for: " + su::u8((int)type));
-			return;
-	}
-
-	use_imgui_ = false;
+	if (ImGuiHook::Unload())
+		use_imgui_ = false;
+	else
+		Log::Error("ModuleManager::UnloadImGui() failed");
 }
 #endif // UC_ENABLE_IMGUI
 
@@ -330,10 +313,7 @@ void ModuleManager::OnPostUpdate()
 
 #ifdef UC_ENABLE_IMGUI
 		if (use_imgui_)
-		{
-			use_imgui_ = false;
 			UnloadImGui();
-		}
 #endif // UC_ENABLE_IMGUI
 
 #if defined(UC_DLL_INJECTOR)
