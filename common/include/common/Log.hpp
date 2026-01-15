@@ -8,7 +8,7 @@ namespace Log
 {
 
 
-void Line(Logger::Level level, Logger::Type type, std::initializer_list<cs::ColoredString> _line);
+void Line(Logger::Level level, Logger::Type type, std::initializer_list<cs::StyledString> _line);
 
 template <typename T>
 struct Hex
@@ -45,14 +45,14 @@ template <typename T>
 static constexpr bool _is_padded<Pad<T>> = true;
 
 template <size_t N = 128>
-struct _BufferedColoredString
+struct _BufferedStyledString
 {
 	static_assert(N >= 32, "Why would you want less?");
 
 public:
 
 	template <typename T>
-	constexpr _BufferedColoredString& format_from(const T& val)
+	constexpr _BufferedStyledString& format_from(const T& val)
 	{
 		using VT = std::decay_t<T>;
 
@@ -143,15 +143,15 @@ public:
 		return *this;
 	}
 
-	constexpr cs::ColoredString Get(cs::Color color) const
+	constexpr cs::StyledString Get(cs::Color color) const
 	{
 		if (ptr_)
-			return cs::ColoredString{ { ptr_.get(), size_ }, color };
+			return cs::StyledString{ { ptr_.get(), size_ }, color };
 
 		if (!str_.empty())
-			return cs::ColoredString{ str_, color };
+			return cs::StyledString{ str_, color };
 
-		return cs::ColoredString{ { buffer_, size_ }, color };
+		return cs::StyledString{ { buffer_, size_ }, color };
 	}
 
 private:
@@ -166,11 +166,11 @@ template <typename... TArgs>
 inline void Line(Logger::Level level, Logger::Type type, TArgs&&... args)
 {
 	constexpr size_t num_args = sizeof...(TArgs);
-	_BufferedColoredString<> buffered_parts[num_args];
-	cs::ColoredString parts[num_args];
+	_BufferedStyledString<> buffered_parts[num_args];
+	cs::StyledString parts[num_args];
 
 	[&]<size_t... I>(std::index_sequence<I...>) {
-		((parts[I] = buffered_parts[I].format_from(cs::UnrapColored(args)).Get(cs::UnrapColor(args))), ...);
+		((parts[I] = buffered_parts[I].format_from(cs::UnrapStyled(args)).Get(cs::UnrapColor(args))), ...);
 	}(std::make_index_sequence<num_args>());
 
 	Line(level, type, std::initializer_list(parts, parts + num_args));

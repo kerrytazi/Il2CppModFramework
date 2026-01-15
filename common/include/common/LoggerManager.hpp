@@ -28,7 +28,7 @@ public:
 	LoggerManager();
 	~LoggerManager();
 
-	void LogLine(Logger::Level level, Logger::Type type, std::initializer_list<cs::ColoredString> line);
+	void LogLine(Logger::Level level, Logger::Type type, std::initializer_list<cs::StyledString> line);
 
 private:
 

@@ -3,7 +3,7 @@
 #include "common/LoggerManager.hpp"
 
 #include "common/Logger.hpp"
-#include "common/ColoredString.hpp"
+#include "common/StyledString.hpp"
 #include "common/LazyStatic.hpp"
 
 struct RegisteredLogger
@@ -45,7 +45,7 @@ LoggerManager::~LoggerManager()
 {
 }
 
-void LoggerManager::LogLine(Logger::Level level, Logger::Type type, std::initializer_list<cs::ColoredString> line)
+void LoggerManager::LogLine(Logger::Level level, Logger::Type type, std::initializer_list<cs::StyledString> line)
 {
 	std::unique_lock lock(mtx_);
 

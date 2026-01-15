@@ -33,6 +33,34 @@ private:
 		Log::Warn((const void*)"Hello", " ", (void*)"world");
 		Log::Error(Log::Pad(123), " ", Log::Hex(123), " ", Log::Pad(Log::Hex(123)));
 		Log::Error(su::u8((void*)"hello"));
+
+		Log::Info(cs::Default("color Default"), "  ", cs::White("color White"));
+		Log::Info(cs::White("color White"), "  ", cs::Black("color Black"));
+		Log::Info(cs::Black("color Black"), "  ", cs::Gray("color Gray"));
+		Log::Info(cs::Gray("color Gray"), "  ", cs::Red("color Red"));
+		Log::Info(cs::Red("color Red"), "  ", cs::Green("color Green"));
+		Log::Info(cs::Green("color Green"), "  ", cs::Blue("color Blue"));
+		Log::Info(cs::Blue("color Blue"), "  ", cs::Yellow("color Yellow"));
+		Log::Info(cs::Yellow("color Yellow"), "  ", cs::Orange("color Orange"));
+		Log::Info(cs::Orange("color Orange"), "  ", cs::Pink("color Pink"));
+		Log::Info(cs::Pink("color Pink"), "  ", cs::Cyan("color Cyan"));
+		Log::Info(cs::Cyan("color Cyan"), "  ", cs::Purple("color Purple"));
+		Log::Info(cs::Purple("color Purple"), "  ", cs::Default("color Default"));
+
+		// UTF-8 Test
+		Log::Info("\x55\x54\x46\x2d\x38\x20\x54\x65\x73\x74\x3a\x20\x43\x61\x66\xc3\xa9\x20\x45\x73\x70\x61\xc3\xb1\x61");
+
+		// Emojis
+		Log::Info("\x45\x6d\x6f\x6a\x69\x73\x3a\x20\xf0\x9f\x98\x80\x20\xf0\x9f\x9a\x80\x20\xf0\x9f\x8e\x89\x20\xf0\x9f\x8c\x8d");
+
+		// Cyrillic
+		Log::Info("\x43\x79\x72\x69\x6c\x6c\x69\x63\x3a\x20\xd0\x9f\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82\x20\xd0\xbc\xd0\xb8\xd1\x80");
+
+		// Japanese
+		Log::Info("\x4a\x61\x70\x61\x6e\x65\x73\x65\x3a\x20\xe3\x81\x93\xe3\x82\x93\xe3\x81\xab\xe3\x81\xa1\xe3\x81\xaf\xe4\xb8\x96\xe7\x95\x8c");
+
+		// Chinese
+		Log::Info("\x43\x68\x69\x6e\x65\x73\x65\x3a\x20\xe4\xbd\xa0\xe5\xa5\xbd\xe4\xb8\x96\xe7\x95\x8c");
 	}
 
 	void TestStackTracer()

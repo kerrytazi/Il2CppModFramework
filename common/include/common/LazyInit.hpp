@@ -16,7 +16,6 @@ public:
 	T& Deref()
 	{
 		CheckInit();
-		__assume(value_.has_value());
 		return *value_;
 	}
 

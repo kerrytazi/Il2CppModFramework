@@ -76,11 +76,11 @@ BOOL APIENTRY Bootstrap(HMODULE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			break;
 
 		case DLL_THREAD_ATTACH:
-			Log::Debug("Bootstrap DLL_THREAD_ATTACH");
+			// Log::Debug("Bootstrap DLL_THREAD_ATTACH");
 			break;
 
 		case DLL_THREAD_DETACH:
-			Log::Debug("Bootstrap DLL_THREAD_DETACH");
+			// Log::Debug("Bootstrap DLL_THREAD_DETACH");
 			break;
 
 		case DLL_PROCESS_DETACH:

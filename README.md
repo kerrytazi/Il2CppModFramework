@@ -68,7 +68,7 @@ Each Logger must be inherited from `Logger`. And should be registered using `Reg
 **NOTE**: You can set log order priority using `RegisterLoggerStatic` second template argument.
 
 Logger can override any of:
-- `virtual void AddLine(Level level, Type type, std::initializer_list<cs::ColoredString> line)` - Called each time you call any function from the `Log` namespace.
+- `virtual void AddLine(Level level, Type type, std::initializer_list<cs::StyledString> line)` - Called each time you call any function from the `Log` namespace.
 It's up to you to filter messages by their `level` and `type`.
 
 # Developing

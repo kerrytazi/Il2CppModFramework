@@ -1,8 +1,5 @@
 #pragma once
 
-#include "common/ModuleManager.hpp"
-#include "common/Module.hpp"
-
 #include <string>
 #include <string_view>
 #include <fstream>
@@ -46,9 +43,23 @@ public:
 			throw std::runtime_error("Can't open log file for writing: " + filename);
 	}
 
+	void Add(std::string_view msg)
+	{
+		if (msg.empty())
+			return;
+
+		file_ << msg;
+
+		if (flags_.flush_each_line && msg.back() == '\n')
+			file_.flush();
+	}
+
 	void AddLine(std::string_view line)
 	{
-		file_ << line << "\n";
+		if (!line.empty())
+			file_ << line;
+
+		file_ << "\n";
 
 		if (flags_.flush_each_line)
 			file_.flush();

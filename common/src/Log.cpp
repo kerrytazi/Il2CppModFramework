@@ -4,7 +4,7 @@
 #include "common/LoggerManager.hpp"
 
 
-void Log::Line(Logger::Level level, Logger::Type type, std::initializer_list<cs::ColoredString> _line)
+void Log::Line(Logger::Level level, Logger::Type type, std::initializer_list<cs::StyledString> _line)
 {
 	if (!g_logger_manager)
 		return;

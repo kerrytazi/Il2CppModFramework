@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/ColoredString.hpp"
+#include "common/StyledString.hpp"
 
 #include <string>
 #include <string_view>
@@ -36,7 +36,8 @@ public:
 
 	// Called each time you call any function from the Log namespace.
 	// It's up to you to filter messages by their level and type.
-	virtual void AddLine(Level level, Type type, std::initializer_list<cs::ColoredString> line);
+	virtual void AddLine(Level level, Type type, std::initializer_list<cs::StyledString> line);
 
+	size_t GetSystemTimeStr(char* out, size_t out_size);
 	std::string GetSystemTimeStr();
 };
