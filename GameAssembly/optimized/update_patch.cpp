@@ -33,7 +33,7 @@ struct FriendIl2CppOnUpdate
 
 static bool PatchUnityPlayerLoop()
 {
-	auto original_player_loop = SEHGuarded([]() -> const void* {
+	auto original_player_loop = SEHGuarded("PatchUnityPlayerLoop", []() -> const void* {
 		const char err_message[] =
 			"An abnormal situation has occurred: "
 			"the PlayerLoop internal function has been called recursively. "

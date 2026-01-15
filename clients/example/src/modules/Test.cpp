@@ -8,10 +8,12 @@
 
 #include "UnityEngine/GameObject.hpp"
 #include "UnityEngine/Component.hpp"
-#include "System/Exception.hpp"
 #include "System/String.hpp"
 #include "il2cpp/il2cpp.hpp"
 #include "il2cpp/Class.hpp"
+#include "il2cpp/Method.hpp"
+
+#include "common/ExceptionGuarded.hpp"
 
 #include "StackTracer/StackTracer.hpp"
 
@@ -74,28 +76,23 @@ private:
 
 	void TestException()
 	{
-		using func_t = int(*)(void*);
-		func_t func = (func_t)(il2cpp::GetGameAssemblyBase() + 0x6F17C20); // FIXME
+		ExceptionGuarded("TestException segfault", [](){
+			((void(*)())nullptr)();
+			return 0;
+		});
 
-		try
-		{
-			func(nullptr);
-		}
-		catch (const std::exception& ex)
-		{
-			Log::Debug("Exception: ", ex.what());
-		}
-		catch (Il2CppExceptionWrapper& ex)
-		{
-			Log::Debug("Exception: ", ex.GetException()->GetMessage()->AsU16StringView());
-			Log::Debug("Exception: ", ex.GetException()->GetSource()->AsU16StringView());
-			Log::Debug("Exception: ", ex.GetException()->GetStackTrace()->AsU16StringView());
-			Log::Debug("Exception: ", ex.GetException()->GetInnerException());
-		}
-		catch (...)
-		{
-			Log::Debug("Exception ?");
-		}
+		ExceptionGuarded("TestException game exception", [](){
+			auto method = il2cpp::Method::Find("UnityEngine", "GameObject", "get_scene", "UnityEngine.SceneManagement.Scene", {});
+			auto method_ptr = method->GetMethodPointer<int(void*)>();
+			// Should throw null reference exception
+			// Since this method requires `this`
+			return method_ptr(nullptr);
+		});
+
+		ExceptionGuarded("TestException std exception", [](){
+			throw std::runtime_error("Test exception");
+			return 0;
+		});
 	}
 };
 
