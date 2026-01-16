@@ -19,10 +19,6 @@ public:
 			g_module_manager->RequestUnload();
 		}
 	}
-
-private:
-
-	bool imgui_active_ = false;
 };
 
 static RegisterModuleStatic<LoaderModule> registered;
