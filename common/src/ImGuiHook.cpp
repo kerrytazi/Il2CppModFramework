@@ -41,8 +41,8 @@ static const std::string& GetIniPath()
 
 static const std::string& GetLogPath()
 {
-	if (g_ini_path.empty() && GetImGuiLogFilename() != nullptr)
-		g_ini_path = GetExeDir() + "/" + GetImGuiLogFilename();
+	if (g_log_path.empty() && GetImGuiLogFilename() != nullptr)
+		g_log_path = GetExeDir() + "/" + GetImGuiLogFilename();
 
 	return g_log_path;
 }
@@ -446,9 +446,7 @@ bool ImGuiHook::Load()
 	{
 #ifdef _WIN32
 		case UnityEngine::Rendering::GraphicsDeviceType::Direct3D11:
-			if (!LoadD3D11())
-				return false;
-			break;
+			return LoadD3D11();
 #endif // _WIN32
 		default:
 			Log::Error("ImGuiHook::Load(): ImGui is not implemented for: ", (int)type);
@@ -461,6 +459,8 @@ bool ImGuiHook::Load()
 bool ImGuiHook::Unload()
 {
 	auto type = UnityEngine::SystemInfo::GetGraphicsDeviceType();
+
+	assert(ImGui::GetCurrentContext());
 
 	switch (type)
 	{
