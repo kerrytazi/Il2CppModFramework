@@ -29,11 +29,6 @@ inline void SetupConsole(const std::string& console_name)
 		}
 
 		SetConsoleTitleA(console_name.c_str());
-
-		FILE* fp;
-		freopen_s(&fp, "CONOUT$", "w", stdout);
-		freopen_s(&fp, "CONOUT$", "w", stderr);
-		freopen_s(&fp, "CONIN$", "r", stdin);
 	}
 }
 
