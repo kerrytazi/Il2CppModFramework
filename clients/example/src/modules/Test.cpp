@@ -12,6 +12,7 @@
 #include "il2cpp/il2cpp.hpp"
 #include "il2cpp/Class.hpp"
 #include "il2cpp/Method.hpp"
+#include "il2cpp/gc_ref.hpp"
 
 #include "common/ExceptionGuarded.hpp"
 
@@ -27,6 +28,23 @@ public:
 	}
 
 private:
+
+	il2cpp::gc_ref<System::String> mystr_;
+	void TestCreateGCRef()
+	{
+		mystr_ = il2cpp::gc_ref(System::String::New("hello world"));
+		auto str2 = mystr_;
+
+		il2cpp::gc_ref<System::Object> test = il2cpp::gc_ref(System::String::New("hello world"));
+	}
+	void TestUpdateGCRef()
+	{
+		if (!mystr_.is_alive())
+		{
+			Log::Debug("TestUpdateGCRef mystr_ died");
+			mystr_ = {};
+		}
+	}
 
 	void TestLog()
 	{

@@ -38,6 +38,11 @@ void MyIl2CppData::Init()
 	init_func(il2cpp_string_new);
 	init_func(il2cpp_string_new_utf16);
 
+	init_func(il2cpp_gchandle_new);
+	init_func(il2cpp_gchandle_new_weakref);
+	init_func(il2cpp_gchandle_get_target);
+	init_func(il2cpp_gchandle_free);
+
 	init_func(il2cpp_class_get_method_from_name);
 	init_func(il2cpp_init);
 	init_func(il2cpp_domain_get);

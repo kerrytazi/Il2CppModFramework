@@ -72,14 +72,38 @@ void* il2cpp::resolve_icall(const char* name)
 	return result;
 }
 
-System::String* il2cpp::il2cpp_string_new(const char* str, int32_t len)
+uint32_t il2cpp::gchandle_new(System::Object* obj, bool pinned)
+{
+	assert(g_il2cpp_data.il2cpp_gchandle_new);
+	return g_il2cpp_data.il2cpp_gchandle_new(obj, pinned);
+}
+
+uint32_t il2cpp::gchandle_new_weakref(System::Object* obj, bool track_resurrection)
+{
+	assert(g_il2cpp_data.il2cpp_gchandle_new_weakref);
+	return g_il2cpp_data.il2cpp_gchandle_new_weakref(obj, track_resurrection);
+}
+
+System::Object* il2cpp::gchandle_get_target(uint32_t gchandle)
+{
+	assert(g_il2cpp_data.il2cpp_gchandle_get_target);
+	return g_il2cpp_data.il2cpp_gchandle_get_target(gchandle);
+}
+
+void il2cpp::gchandle_free(uint32_t gchandle)
+{
+	assert(g_il2cpp_data.il2cpp_gchandle_free);
+	return g_il2cpp_data.il2cpp_gchandle_free(gchandle);
+}
+
+System::String* il2cpp::string_new(const char* str, int32_t len)
 {
 	assert(g_il2cpp_data.GameAssembly);
 	assert(g_il2cpp_data.il2cpp_string_new);
 	return g_il2cpp_data.il2cpp_string_new(str, len);
 }
 
-System::String* il2cpp::il2cpp_string_new_utf16(const char16_t* str, int32_t len)
+System::String* il2cpp::string_new_utf16(const char16_t* str, int32_t len)
 {
 	assert(g_il2cpp_data.GameAssembly);
 	assert(g_il2cpp_data.il2cpp_string_new_utf16);

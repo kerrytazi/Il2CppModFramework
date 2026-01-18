@@ -7,12 +7,12 @@
 
 System::String* System::String::New(const std::string_view& str)
 {
-	return il2cpp::il2cpp_string_new(str.data(), (int32_t)str.size());
+	return il2cpp::string_new(str.data(), (int32_t)str.size());
 }
 
 System::String* System::String::New(const std::u16string_view& str)
 {
-	return il2cpp::il2cpp_string_new_utf16(str.data(), (int32_t)str.size());
+	return il2cpp::string_new_utf16(str.data(), (int32_t)str.size());
 }
 
 std::string System::String::AsString() const

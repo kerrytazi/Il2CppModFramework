@@ -8,6 +8,7 @@
 #include <string_view>
 
 namespace System { class String; }
+namespace System { class Object; }
 
 namespace il2cpp
 {
@@ -49,6 +50,11 @@ struct MyIl2CppData
 	void (*il2cpp_free)(void* ptr);
 	System::String* (*il2cpp_string_new)(const char* str, int32_t len);
 	System::String* (*il2cpp_string_new_utf16)(const char16_t* str, int32_t len);
+
+	uint32_t (*il2cpp_gchandle_new)(System::Object* obj, bool pinned);
+	uint32_t (*il2cpp_gchandle_new_weakref)(System::Object* obj, bool track_resurrection);
+	System::Object* (*il2cpp_gchandle_get_target)(uint32_t gchandle);
+	void (*il2cpp_gchandle_free)(uint32_t gchandle);
 
 	const il2cpp::Method* (*il2cpp_class_get_method_from_name)(il2cpp::Class* klass, const char* name, int argsCount);
 	int (*il2cpp_init)(const char* domain_name);

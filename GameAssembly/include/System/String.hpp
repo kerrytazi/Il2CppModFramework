@@ -8,7 +8,7 @@
 namespace System
 {
 
-class String : Object
+class String : public Object
 {
 public:
 
