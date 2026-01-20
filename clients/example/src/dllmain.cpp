@@ -20,6 +20,20 @@ extern "C" HWND GetUnityGameWindow()
 
 #ifdef UC_ENABLE_IMGUI
 // Optional. You can remove this function.
+// Will fallback to DefaultOnImGuiInit.
+// You can set up fonts/styles here.
+extern "C" void OnImGuiInit()
+{
+	auto& io = ImGui::GetIO();
+
+	if (!io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 22.0f))
+		io.Fonts->AddFontDefault();
+
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+}
+
+// Optional. You can remove this function.
 // Will fallback to DefaultGetImGuiIniFilename.
 // If you want to disable imgui saving then return nullptr.
 extern "C" const char* GetImGuiIniFilename()

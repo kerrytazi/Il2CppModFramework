@@ -8,7 +8,7 @@ namespace UnityEngine
 class Transform;
 class GameObject;
 
-class Component : public UnityEngine::Object
+class __autogen Component : public UnityEngine::Object
 {
 public:
 

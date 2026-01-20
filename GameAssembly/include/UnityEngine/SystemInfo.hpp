@@ -8,7 +8,7 @@
 namespace UnityEngine
 {
 
-class SystemInfo : public System::Object
+class __autogen SystemInfo : public System::Object
 {
 public:
 

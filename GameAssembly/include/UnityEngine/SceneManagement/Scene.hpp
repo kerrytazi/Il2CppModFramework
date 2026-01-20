@@ -11,7 +11,7 @@ namespace UnityEngine { class GameObject; }
 namespace UnityEngine::SceneManagement
 {
 
-struct Scene
+struct __autogen Scene
 {
 	__autogen System::Boolean IsValid();
 	__autogen System::String* get_name();

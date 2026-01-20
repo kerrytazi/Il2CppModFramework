@@ -6,7 +6,7 @@
 namespace UnityEngine
 {
 
-class Application : public System::Object
+class __autogen Application : public System::Object
 {
 public:
 

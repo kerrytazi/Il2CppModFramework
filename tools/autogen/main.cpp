@@ -21,6 +21,7 @@ struct Method
 	std::vector<std::string_view> params;
 	bool is_static;
 	bool is_icall;
+	bool is_class_gen;
 };
 
 static std::vector<Method> parse(std::string_view input_file)
@@ -33,6 +34,7 @@ static std::vector<Method> parse(std::string_view input_file)
 	std::stack<char> brace_stack;
 	bool in_valid_class = false;
 	bool in_valid_namespace = false;
+	bool is_class_gen = false;
 
 	while (pos < input_file.size())
 	{
@@ -120,6 +122,18 @@ static std::vector<Method> parse(std::string_view input_file)
 			while (pos < input_file.size() && std::isspace(input_file[pos]))
 			{
 				pos++;
+			}
+
+			if (pos + 10 <= input_file.size() && input_file.substr(pos, 10) == "__autogen ")
+			{
+				pos += 10;
+				is_class_gen = true;
+
+				// Skip any whitespace after __autogen
+				while (pos < input_file.size() && std::isspace(input_file[pos]))
+				{
+					pos++;
+				}
 			}
 
 			// Find class name (stop at '{' or whitespace)
@@ -291,7 +305,8 @@ static std::vector<Method> parse(std::string_view input_file)
 					method_name,
 					std::move(params),
 					is_static,
-					found_autogen_icall
+					found_autogen_icall,
+					is_class_gen
 				);
 			}
 
@@ -421,11 +436,23 @@ int main(int argc, char* argv[])
 	if (methods.empty())
 		return 0;
 
+	output_file << "#include \"System/primitives.hpp\"\n";
+	output_file << "#include \"common/CallCached.hpp\"\n";
+	output_file << "#include \"il2cpp/il2cpp.hpp\"\n";
+	output_file << "#include \"il2cpp/Class.hpp\"\n";
+	output_file << "#include \"il2cpp/Method.hpp\"\n";
+	output_file << "#include \"il2cpp/ClassFinder.hpp\"\n\n";
+	output_file << "#include <cassert>\n\n";
+
 	{
 		std::set<std::string> all_types;
+		std::set<std::pair<std::string, std::string>> all_class_gens;
 
 		for (const auto& method : methods)
 		{
+			if (method.is_class_gen)
+				all_class_gens.emplace(std::string(method.namespaze), std::string(method.klass));
+
 			all_types.insert(replaceAll(std::string(method.namespaze), "::", ".") + "." + std::string(method.klass));
 			all_types.insert(normalize_type(std::string(method.ret_type), false));
 
@@ -465,10 +492,23 @@ int main(int argc, char* argv[])
 
 		if (!all_types.empty())
 			output_file << "\n";
-	}
 
-	output_file << "#include \"System/primitives.hpp\"\n";
-	output_file << "#include \"il2cpp/MethodFinder.hpp\"\n\n";
+		for (const auto& class_gen : all_class_gens)
+		{
+			output_file << "template <>\n";
+			output_file << "struct il2cpp::FindClassOnce<" << class_gen.first << "::" << class_gen.second << ">\n";
+			output_file << "{\n";
+			output_file << "\tstatic const Class* Find()\n";
+			output_file << "\t{\n";
+			output_file << "\t\tauto klass = CallCached<decltype([]() { ";
+			output_file << "return il2cpp::Class::Find(\"" << normalize_type(class_gen.first) << "\", \"" << class_gen.second << "\");";
+			output_file << " })>();\n";
+			output_file << "\t\tassert(klass);\n";
+			output_file << "\t\treturn klass;\n";
+			output_file << "\t}\n";
+			output_file << "};\n\n";
+		}
+	}
 
 	for (const auto& method : methods)
 	{
@@ -490,43 +530,41 @@ int main(int argc, char* argv[])
 		output_file << "{\n";
 
 		output_file << "\tauto func = ";
-		
-		if (method.is_icall)
-			output_file << "il2cpp::FindICallMethodOnce<";
-		else
-			output_file << "il2cpp::FindMethodOnce<";
 
-		output_file << method.ret_type << "(";
-
-		if (!method.is_static)
-		{
-			output_file << "decltype(this)";
-
-			if (!method.params.empty())
-				output_file << ", ";
-		}
-
-		for (size_t i = 0; i < method.params.size(); ++i)
-		{
-			output_file << method.params[i];
-
-			if (i < method.params.size() - 1)
-				output_file << ", ";
-		}
-
-		output_file << "), decltype([]() { ";
+		output_file << "CallCached<decltype([]() {\n";
 
 		if (method.is_icall)
 		{
-			output_file << "return il2cpp::resolve_icall(";
+			output_file << "\t\tusing func_t = ";
+			output_file << method.ret_type << "(*)(";
+
+			if (!method.is_static)
+			{
+				output_file << "decltype(this)";
+
+				if (!method.params.empty())
+					output_file << ", ";
+			}
+
+			for (size_t i = 0; i < method.params.size(); ++i)
+			{
+				output_file << method.params[i];
+
+				if (i < method.params.size() - 1)
+					output_file << ", ";
+			}
+
+			output_file << ");\n";
+
+			output_file << "\t\treturn (func_t)il2cpp::resolve_icall(";
 			output_file << "\"" << method.namespaze << "." << method.klass << "::" << method.name << "\"";
-			output_file << ");";
+			output_file << ");\n";
 		}
 		else
 		{
-			output_file << "return il2cpp::Method::Find(";
-			output_file << "\"" << replaceAll(std::string(method.namespaze), "::", ".") << "\", ";
-			output_file << "\"" << method.klass << "\", ";
+			output_file << "\t\tauto klass = il2cpp::FindClassOnce<" << method.namespaze << "::" << method.klass << ">::Find();\n";
+			output_file << "\t\tassert(klass);\n";
+			output_file << "\t\tauto method = klass->FindMethod(";
 			output_file << "\"" << method.name << "\", ";
 			output_file << "\"" << normalize_type(std::string(method.ret_type)) << "\", ";
 
@@ -544,10 +582,38 @@ int main(int argc, char* argv[])
 
 			output_file << "" << (method.is_static ? "true" : "false");
 
-			output_file << ");";
+			output_file << ");\n";
+			output_file << "\t\tassert(method);\n";
+			output_file << "\t\tauto method_ptr = method->template GetMethodPointer<";
+
+			{
+				output_file << method.ret_type << "(";
+
+				if (!method.is_static)
+				{
+					output_file << "decltype(this)";
+
+					if (!method.params.empty())
+						output_file << ", ";
+				}
+
+				for (size_t i = 0; i < method.params.size(); ++i)
+				{
+					output_file << method.params[i];
+
+					if (i < method.params.size() - 1)
+						output_file << ", ";
+				}
+
+				output_file << ")";
+			}
+
+			output_file << ">();\n";
+			output_file << "\t\tassert(method_ptr);\n";
+			output_file << "\t\treturn method_ptr;\n";
 		}
 
-		output_file << " })>();\n";
+		output_file << "\t})>();\n\n";
 
 		output_file << "\treturn func(";
 

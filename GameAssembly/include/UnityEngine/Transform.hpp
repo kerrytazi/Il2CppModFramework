@@ -13,7 +13,7 @@ struct Vector3;
 struct Quaternion;
 struct Matrix4x4;
 
-class Transform : public UnityEngine::Component
+class __autogen Transform : public UnityEngine::Component
 {
 public:
 

@@ -1,14 +1,15 @@
-#pragma once
+#include "pch.hpp"
 
+#include "il2cpp/ClassFinder.hpp"
+
+#include "il2cpp/Class.hpp"
 #include "il2cpp/Method.hpp"
-#include "common/Templates.hpp"
-
-#include "il2cpp.hpp"
+#include "il2cpp/il2cpp.hpp"
 
 #include <cassert>
 
-namespace il2cpp
-{
+#include "common/Templates.hpp"
+
 
 template <typename TFunc, typename TFinder>
 struct MethodFinderOnce
@@ -40,17 +41,3 @@ struct MethodFinderOnce
 		return ptr;
 	}
 };
-
-template <typename TFunc, typename TFinder>
-auto FindMethodOnce()
-{
-	return MethodFinderOnce<TFunc, TFinder>::Find();
-}
-
-template <typename TFunc, typename TFinder>
-auto FindICallMethodOnce()
-{
-	return MethodFinderOnce<TFunc, TFinder>::FindICall();
-}
-
-} // namespace il2cpp

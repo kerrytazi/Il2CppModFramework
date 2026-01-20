@@ -8,7 +8,7 @@ namespace System { class String; }
 namespace UnityEngine
 {
 
-class Object : public System::Object
+class __autogen Object : public System::Object
 {
 public:
 

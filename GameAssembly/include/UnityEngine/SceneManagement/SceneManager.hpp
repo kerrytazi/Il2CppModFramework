@@ -7,7 +7,7 @@
 namespace UnityEngine::SceneManagement
 {
 
-class SceneManager : public System::Object
+class __autogen SceneManager : public System::Object
 {
 public:
 

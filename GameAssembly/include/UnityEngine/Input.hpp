@@ -7,7 +7,7 @@
 namespace UnityEngine
 {
 
-class Input : public System::Object
+class __autogen Input : public System::Object
 {
 public:
 

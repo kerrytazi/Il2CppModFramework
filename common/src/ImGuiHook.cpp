@@ -12,6 +12,19 @@
 
 #include "imgui.h"
 
+#pragma comment(linker, "/alternatename:OnImGuiInit=DefaultOnImGuiInit")
+extern "C" void OnImGuiInit();
+extern "C" void DefaultOnImGuiInit()
+{
+	auto& io = ImGui::GetIO();
+
+	if (!io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 22.0f))
+		io.Fonts->AddFontDefault();
+
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+}
+
 #pragma comment(linker, "/alternatename:GetImGuiIniFilename=DefaultGetImGuiIniFilename")
 extern "C" const char* GetImGuiIniFilename();
 extern "C" const char* DefaultGetImGuiIniFilename()
@@ -51,7 +64,8 @@ static void ImGuiInitBasic()
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
+
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -65,8 +79,7 @@ static void ImGuiInitBasic()
 	if (!GetIniPath().empty())
 		ImGui::LoadIniSettingsFromDisk(GetIniPath().c_str());
 
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsLight();
+	OnImGuiInit();
 }
 
 

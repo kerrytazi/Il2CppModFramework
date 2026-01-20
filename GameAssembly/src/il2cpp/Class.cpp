@@ -100,4 +100,6 @@ const il2cpp::Method* il2cpp::Class::FindMethod(
 
 		return method;
 	}
+
+	return nullptr;
 }
