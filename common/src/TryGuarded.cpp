@@ -12,12 +12,14 @@ void _HandleTryException(std::string_view name, int ex)
 {
 	Log::Error(cs::Red(name), cs::Red(" catch int: "), cs::Red(ex));
 	StackTracer::LogStackTrace();
+	Log::Flush();
 }
 
 void _HandleTryException(std::string_view name, const std::exception& ex)
 {
 	Log::Error(cs::Red(name), cs::Red(" catch std::exception: "), cs::Red(ex.what()));
 	StackTracer::LogStackTrace();
+	Log::Flush();
 }
 
 void _HandleTryException(std::string_view name, const Il2CppExceptionWrapper& wrapper)
@@ -26,10 +28,12 @@ void _HandleTryException(std::string_view name, const Il2CppExceptionWrapper& wr
 	Log::Error(cs::Red(name), cs::Red(" catch Il2CppExceptionWrapper source: "), cs::Red(wrapper.ex->GetSource()->AsU16StringView()));
 	Log::Error(cs::Red(name), cs::Red(" catch Il2CppExceptionWrapper stack: "), cs::Red(wrapper.ex->GetStackTrace()->AsU16StringView()));
 	StackTracer::LogStackTrace();
+	Log::Flush();
 }
 
 void _HandleTryException(std::string_view name)
 {
 	Log::Error(cs::Red(name), cs::Red(" Exception ?"));
 	StackTracer::LogStackTrace();
+	Log::Flush();
 }

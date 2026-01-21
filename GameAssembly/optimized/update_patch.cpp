@@ -3,11 +3,10 @@
 #include "common/ModuleManager.hpp"
 #include "common/Log.hpp"
 #include "common/SEHGuarded.hpp"
+#include "common/ExceptionGuarded.hpp"
 #include "il2cpp/il2cpp.hpp"
 
 #include "static_lambda/detour_lambda.hpp"
-
-#include "common/ExceptionGuarded.hpp"
 
 #include <stdexcept>
 #include <ranges>
@@ -19,7 +18,7 @@ struct FriendIl2CppOnUpdate
 	static void PatchPlayerLoop(int64_t(*update_func)())
 	{
 		g_player_loop_detour.emplace(update_func, [](auto original) -> int64_t {
-			auto result = ExceptionGuarded("PatchPlayerLoop", [&]() {
+			auto res = ExceptionGuarded("PatchPlayerLoop", [&]() {
 				if (g_module_manager)
 					g_module_manager->OnPreUpdate();
 
@@ -31,18 +30,13 @@ struct FriendIl2CppOnUpdate
 				return result;
 			});
 
-			if (result.has_value())
-			{
-				return *result;
-			}
-			else
-			{
-				// Try to gracefully unload client to minimize damage to the game
-				if (g_module_manager)
-					g_module_manager->RequestUnload();
+			if (res.has_value())
+				return *res;
 
-				return 0;
-			}
+			if (g_module_manager)
+				g_module_manager->RequestUnload();
+
+			return 1;
 		});
 	}
 };
