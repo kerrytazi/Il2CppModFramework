@@ -95,6 +95,11 @@ private:
 	void TestException()
 	{
 		ExceptionGuarded("TestException segfault", [](){
+			*(int*)nullptr = 123;
+			return 0;
+		});
+
+		ExceptionGuarded("TestException segfault", [](){
 			((void(*)())nullptr)();
 			return 0;
 		});
