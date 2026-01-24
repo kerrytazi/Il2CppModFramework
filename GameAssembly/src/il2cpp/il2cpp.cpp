@@ -78,6 +78,12 @@ System::Object* il2cpp::object_new(const Class* klass)
 	return g_il2cpp_data.il2cpp_object_new(klass);
 }
 
+System::Object* il2cpp::array_new(const Class* element_klass, uintptr_t length)
+{
+	assert(g_il2cpp_data.il2cpp_array_new);
+	return g_il2cpp_data.il2cpp_array_new(element_klass, length);
+}
+
 uint32_t il2cpp::gchandle_new(System::Object* obj, bool pinned)
 {
 	assert(g_il2cpp_data.il2cpp_gchandle_new);
@@ -104,16 +110,26 @@ void il2cpp::gchandle_free(uint32_t gchandle)
 
 System::String* il2cpp::string_new(const char* str, int32_t len)
 {
-	assert(g_il2cpp_data.GameAssembly);
 	assert(g_il2cpp_data.il2cpp_string_new);
 	return g_il2cpp_data.il2cpp_string_new(str, len);
 }
 
 System::String* il2cpp::string_new_utf16(const char16_t* str, int32_t len)
 {
-	assert(g_il2cpp_data.GameAssembly);
 	assert(g_il2cpp_data.il2cpp_string_new_utf16);
 	return g_il2cpp_data.il2cpp_string_new_utf16(str, len);
+}
+
+System::Object* il2cpp::type_get_object(const Type* type)
+{
+	assert(g_il2cpp_data.il2cpp_type_get_object);
+	return g_il2cpp_data.il2cpp_type_get_object(type);
+}
+
+const il2cpp::Class* il2cpp::class_from_type(const Type* type)
+{
+	assert(g_il2cpp_data.il2cpp_class_from_type);
+	return g_il2cpp_data.il2cpp_class_from_type(type);
 }
 
 intptr_t il2cpp::GetGameAssemblyBase()

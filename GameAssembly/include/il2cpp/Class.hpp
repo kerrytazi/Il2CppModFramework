@@ -20,6 +20,7 @@ class Class : _NoImplement
 {
 public:
 
+	const Type* GetType() const;
 	std::string_view GetName() const; // null-terminated
 	std::string_view GetNamespace() const; // null-terminated
 
@@ -28,7 +29,13 @@ public:
 	std::span<const Property> GetProperties() const;
 	std::span<const Event> GetEvents() const;
 
-	bool IsInitialized() const;
+
+	const Method* GetVirtualMethod(const Method* method) const;
+
+	const Class* GetDeclaringClass() const;
+	const Class* GetElementClass() const;
+	const Class* GetBase() const;
+	const bool IsBaseOf(const Class* _derived) const;
 
 	const Method* FindMethod(
 		std::string_view method_name,

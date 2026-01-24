@@ -21,6 +21,7 @@ extern void _LoggerCleanup();
 void _BootstrapCleanup()
 {
 	Log::Debug("_BootstrapCleanup");
+	Log::Flush();
 
 	g_module_manager = nullptr;
 	g_logger_manager = nullptr;
@@ -41,10 +42,10 @@ static void _UnloadLibraryFromThread()
 
 void _StartUnloadLibrary()
 {
-	Log::Debug("_UnloadLibraryFromThread");
+	Log::Debug("_StartUnloadLibrary");
 
 	CreateThread(nullptr, 0, [](void* param) -> DWORD {
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		_UnloadLibraryFromThread();
 	}, nullptr, 0, 0);
 }

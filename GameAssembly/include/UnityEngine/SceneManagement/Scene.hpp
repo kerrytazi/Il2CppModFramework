@@ -7,6 +7,7 @@
 
 namespace il2cpp { template <typename T> class Array; }
 namespace UnityEngine { class GameObject; }
+namespace System { class String; }
 
 namespace UnityEngine::SceneManagement
 {

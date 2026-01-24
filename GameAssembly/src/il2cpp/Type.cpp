@@ -3,7 +3,9 @@
 #include "common/ExitScope.hpp"
 
 #include "il2cpp/Type.hpp"
+#include "System/Type.hpp"
 
+#include "il2cpp/il2cpp.hpp"
 #include "il2cpp_data.hpp"
 
 const std::string& il2cpp::Type::GetName() const
@@ -51,4 +53,14 @@ int il2cpp::Type::SizeOfType() const
 	}
 
 	return -1;
+}
+
+System::Type* il2cpp::Type::ToSystemType() const
+{
+	return static_cast<System::Type*>(il2cpp::type_get_object(this));
+}
+
+const il2cpp::Class* il2cpp::Type::ToClass() const
+{
+	return il2cpp::class_from_type(this);
 }

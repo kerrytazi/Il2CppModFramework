@@ -13,6 +13,11 @@
 #error UC_UNITY_VERSION_NUM is not defined
 #endif
 
+const il2cpp::Type* il2cpp::Class::GetType() const
+{
+	return &byval_arg;
+}
+
 std::string_view il2cpp::Class::GetName() const
 {
 	return name;
@@ -43,9 +48,38 @@ std::span<const il2cpp::Event> il2cpp::Class::GetEvents() const
 	return std::span(events, event_count);
 }
 
-bool il2cpp::Class::IsInitialized() const
+const il2cpp::Class* il2cpp::Class::GetDeclaringClass() const
 {
-	return initialized;
+	return declaringType;
+}
+
+const il2cpp::Class* il2cpp::Class::GetElementClass() const
+{
+	return element_class;
+}
+
+const il2cpp::Method* il2cpp::Class::GetVirtualMethod(const Method* method) const
+{
+	assert(IsBaseOf(method->GetClass()) || method->GetClass()->IsBaseOf(this));
+	auto slot = method->GetVirtualMethodSlot();
+	assert(slot < vtable_count);
+	return vtable[slot].method;
+}
+
+const il2cpp::Class* il2cpp::Class::GetBase() const
+{
+	return parent;
+}
+
+const bool il2cpp::Class::IsBaseOf(const Class* _derived) const
+{
+	if (_derived == nullptr)
+		return false;
+
+	if (this == _derived)
+		return true;
+
+	return IsBaseOf(_derived->GetBase());
 }
 
 const il2cpp::Class* il2cpp::Class::Find(std::string_view namespaze, std::string_view class_name)

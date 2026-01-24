@@ -16,6 +16,7 @@
 #include <fstream>
 #include <filesystem>
 #include <charconv>
+#include <bit>
 
 #include "nlohmann/json.hpp"
 #include "simdutf.h"

@@ -30,6 +30,8 @@ public:
 
 	void RequestLoad();
 	void RequestUnload();
+	bool IsUnloading() const;
+	bool IsUnloaded() const;
 
 #ifdef UC_ENABLE_IMGUI
 	void RequestLoadImGui();
@@ -60,7 +62,7 @@ private:
 
 #ifdef UC_ENABLE_IMGUI
 	std::atomic<bool> request_use_imgui_ = false;
-	bool use_imgui_ = false;
+	std::atomic<bool> use_imgui_ = false;
 
 	void OnImGui();
 

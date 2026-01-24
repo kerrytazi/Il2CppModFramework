@@ -49,8 +49,11 @@ struct MyIl2CppData
 	char* (*il2cpp_type_get_name)(const il2cpp::Type* type);
 	void (*il2cpp_free)(void* ptr);
 	System::Object* (*il2cpp_object_new)(const il2cpp::Class* klass);
+	System::Object* (*il2cpp_array_new)(const il2cpp::Class* element_klass, uintptr_t length);
 	System::String* (*il2cpp_string_new)(const char* str, int32_t len);
 	System::String* (*il2cpp_string_new_utf16)(const char16_t* str, int32_t len);
+	System::Object* (*il2cpp_type_get_object)(const il2cpp::Type *type);
+	il2cpp::Class* (*il2cpp_class_from_type)(const il2cpp::Type* type);
 
 	uint32_t (*il2cpp_gchandle_new)(System::Object* obj, bool pinned);
 	uint32_t (*il2cpp_gchandle_new_weakref)(System::Object* obj, bool track_resurrection);
@@ -65,7 +68,6 @@ struct MyIl2CppData
 	il2cpp::Field* (*il2cpp_class_get_fields)(il2cpp::Class* klass, void** iter);
 	il2cpp::Property* (*il2cpp_class_get_properties)(il2cpp::Class* klass, void** iter);
 	il2cpp::Event* (*il2cpp_class_get_events)(il2cpp::Class* klass, void** iter);
-	il2cpp::Class* (*il2cpp_class_from_type)(const il2cpp::Type* type);
 	const il2cpp::Type* (*il2cpp_class_get_type)(il2cpp::Class* klass);
 
 	std::vector<CachedClass> cached_classes;

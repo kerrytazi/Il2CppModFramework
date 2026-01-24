@@ -27,6 +27,8 @@ public:
 	bool IsPublic() const { return (flags & METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK) == METHOD_ATTRIBUTE_PUBLIC; }
 	bool IsPrivate() const { return (flags & METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK) == METHOD_ATTRIBUTE_PRIVATE; }
 
+	uint16_t GetVirtualMethodSlot() const;
+
 	const Type* GetReturnType() const { return return_type; }
 
 	size_t GetParametersCount() const { return parameters_count; }

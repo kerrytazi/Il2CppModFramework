@@ -56,6 +56,7 @@ void SimpleParser::Parse()
 	bool want_name_class = false;
 	bool want_autogen = false;
 	bool want_autogen_icall = false;
+	bool want_autogen_virtual = false;
 	bool want_method_ret_type = false;
 	bool want_method_name = false;
 	bool want_method_arguments = false;
@@ -128,6 +129,7 @@ void SimpleParser::Parse()
 				want_whitespaces = true;
 				want_autogen = true;
 				result_.any_autogen = true;
+				result_.any_method = true;
 				continue;
 			}
 
@@ -139,6 +141,20 @@ void SimpleParser::Parse()
 				want_whitespaces = true;
 				want_autogen_icall = true;
 				result_.any_autogen = true;
+				result_.any_icall = true;
+				continue;
+			}
+
+			if (TryReadToken("__autogen_virtual"))
+			{
+				if (want_name_class)
+					throw std::runtime_error("Invalid __autogen_virtual. Can't be declared for class");
+
+				want_whitespaces = true;
+				want_autogen_virtual = true;
+				result_.any_autogen = true;
+				result_.any_method = true;
+				result_.any_virtual = true;
 				continue;
 			}
 
@@ -238,6 +254,19 @@ void SimpleParser::Parse()
 				method.is_icall = true;
 				want_method_ret_type = true;
 				want_autogen_icall = false;
+				continue;
+			}
+
+			if (want_autogen_virtual)
+			{
+				if (cur_class_index == (uint16_t)-1)
+					throw std::runtime_error("Invalid __autogen_virtual. Outside of class");
+
+				cur_method_index = (uint16_t)result_.namespaces[cur_namespace_index].classes[cur_class_index].methods.size();
+				auto& method = result_.namespaces[cur_namespace_index].classes[cur_class_index].methods.emplace_back();
+				method.is_virtual = true;
+				want_method_ret_type = true;
+				want_autogen_virtual = false;
 				continue;
 			}
 
@@ -355,13 +384,7 @@ std::string SimpleParser::TryReadTypeName()
 				continue;
 			}
 
-			if (*ptr_ == ' ')
-			{
-				result += *ptr_++;
-				continue;
-			}
-
-			if (*ptr_ == ',')
+			if (*ptr_ == '(' || *ptr_ == ')' || *ptr_ == ',' || *ptr_ == ' ')
 			{
 				result += *ptr_++;
 				continue;

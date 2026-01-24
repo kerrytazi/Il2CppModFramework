@@ -4,8 +4,12 @@
 
 #include <string>
 
+namespace System { class Type; }
+
 namespace il2cpp
 {
+
+class Class;
 
 class Type : _NoImplement
 {
@@ -13,6 +17,8 @@ public:
 
 	const std::string& GetName() const; // Reference may be invalid on consequent call
 	int SizeOfType() const; // 0 = void, -1 = unknown
+	System::Type* ToSystemType() const;
+	const Class* ToClass() const;
 
 private:
 

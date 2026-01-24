@@ -18,6 +18,7 @@ struct ParsedMethod
 	std::vector<std::string> parameters;
 	bool is_static = false;
 	bool is_icall = false;
+	bool is_virtual = false;
 };
 
 struct ParsedClass
@@ -39,4 +40,7 @@ struct ParsedResult
 {
 	std::vector<ParsedNamespace> namespaces;
 	bool any_autogen = false;
+	bool any_icall = false;
+	bool any_method = false;
+	bool any_virtual = false;
 };

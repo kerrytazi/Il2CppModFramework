@@ -1,6 +1,6 @@
-#include "pch.hpp"
+#include "../src/ImGuiHook.hpp"
 
-#include "ImGuiHook.hpp"
+#include "../src/ImDrawDataCopy.hpp"
 
 #include "common/Log.hpp"
 #include "common/StringUtils.hpp"
@@ -8,9 +8,10 @@
 
 #include "static_lambda/detour_lambda.hpp"
 
-#include "ImDrawDataCopy.hpp"
-
 #include "imgui.h"
+
+#include <optional>
+#include <filesystem>
 
 #pragma comment(linker, "/alternatename:OnImGuiInit=DefaultOnImGuiInit")
 extern "C" void OnImGuiInit();
@@ -248,7 +249,7 @@ static bool LoadD3D11()
 
 	g_hwnd = GetUnityGameWindow();
 
-	Log::Debug("g_hwnd: ",g_hwnd);
+	Log::Debug("Unity Game Window HWND: ", g_hwnd);
 
 	if (!g_hwnd)
 	{

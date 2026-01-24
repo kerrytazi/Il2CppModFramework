@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.13)
 project("common")
 
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/config_common.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../cmake/add_optimized.cmake")
 
 config_common(common STATIC)
 
-if(NOT UC_ENABLE_IMGUI)
-	set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/src/ImGuiHook.cpp" PROPERTIES HEADER_FILE_ONLY TRUE)
+if(UC_ENABLE_IMGUI)
+	add_optimized(common_optimized STATIC "${CMAKE_CURRENT_LIST_DIR}/optimized/ImGuiHook.cpp")
+	target_link_libraries(common common_optimized)
 endif()
 
 if(UC_LOADER STREQUAL "DLL_INJECTOR")

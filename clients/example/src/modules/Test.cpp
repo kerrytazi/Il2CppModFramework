@@ -12,6 +12,8 @@
 #include "System/Threading/ThreadPool.hpp"
 #include "System/Threading/WaitCallback.hpp"
 #include "il2cpp/il2cpp.hpp"
+#include "il2cpp/Assembly.hpp"
+#include "il2cpp/Image.hpp"
 #include "il2cpp/Class.hpp"
 #include "il2cpp/Method.hpp"
 #include "il2cpp/gc_ref.hpp"
@@ -30,6 +32,24 @@ public:
 	}
 
 private:
+
+	void TestDumpClass(const std::string& pref, const il2cpp::Class* klass)
+	{
+		Log::Debug("namespace '", klass->GetNamespace(), "' class '", klass->GetName(), "' 0x", klass);
+		if (auto declaring = klass->GetDeclaringClass())
+			TestDumpClass(pref + "    declaring: ", declaring);
+	}
+	void TestDumpClasses()
+	{
+		for (auto image : il2cpp::Assembly::GetImagesView())
+		{
+			Log::Debug("----------------");
+			Log::Debug("image ", image->GetName());
+
+			for (auto klass : image->GetClassesView())
+				TestDumpClass("", klass);
+		}
+	}
 
 	void TestThreadPool()
 	{

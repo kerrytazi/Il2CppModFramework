@@ -2,7 +2,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/config_mini.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/config_flags.cmake")
 cmake_policy(SET CMP0079 NEW)
 
-function(add_autogen project_target root_dir)
+function(add_autogen project_target)
 	message(STATUS "Adding autogen for ${project_target}")
 
 	get_target_property(target_sources ${project_target} SOURCES)
@@ -41,7 +41,7 @@ function(add_autogen project_target root_dir)
 		)
 	endforeach()
 
-	config_mini(${project_target}_autogen STATIC "${generated_files}" ${root_dir})
+	config_mini(${project_target}_autogen STATIC "${generated_files}" ${CMAKE_SOURCE_DIR})
 
 	target_link_libraries(${project_target} ${project_target}_autogen)
 endfunction()

@@ -44,8 +44,9 @@ static std::string NormalizeType(std::string type, bool add_array = true)
 	auto removed_pointers = ReplaceAll(std::move(replaced_scope), "*", "");
 	auto removed_spaces = ReplaceAll(std::move(removed_pointers), " ", "");
 	auto replaced_array = ReplaceArray(std::move(removed_spaces), add_array);
+	auto removed_empty_template = ReplaceAll(std::move(replaced_array), "<>", "");
 
-	return replaced_array;
+	return removed_empty_template;
 }
 
 static std::string NormalizeMethodName(std::string method)
@@ -65,14 +66,6 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 	std::stringstream ss;
 	ss << generated_comment;
 
-	ss << "#include \"System/primitives.hpp\"\n";
-	ss << "#include \"common/CallCached.hpp\"\n";
-	ss << "#include \"il2cpp/il2cpp.hpp\"\n";
-	ss << "#include \"il2cpp/Class.hpp\"\n";
-	ss << "#include \"il2cpp/Method.hpp\"\n";
-	ss << "#include \"il2cpp/ClassFinder.hpp\"\n\n";
-	ss << "#include <cassert>\n\n";
-
 	{
 		std::set<std::string> all_types;
 
@@ -89,19 +82,13 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 				{
 					all_types.insert(ReplaceAll(ns.name, "::", ".") + "." + cl.name);
 
-					if (m.ret_type.find(ignore_class) == std::string_view::npos)
+					if (m.ret_type.find(ignore_class) == std::string_view::npos && m.ret_type.find("*") == std::string_view::npos)
 						all_types.insert(NormalizeType(m.ret_type, false));
-
-					if (m.ret_type.find("il2cpp::Array") != -1)
-						all_types.insert("il2cpp.Array");
 
 					for (const auto& param : m.parameters)
 					{
-						if (param.find(ignore_class) == std::string_view::npos)
+						if (param.find(ignore_class) == std::string_view::npos && param.find("*") == std::string_view::npos && param.find("&") == std::string_view::npos)
 							all_types.insert(ReplaceAll(NormalizeType(param, false), "&", ""));
-
-						if (param.find("il2cpp::Array") != -1)
-							all_types.insert("il2cpp.Array");
 					}
 				}
 			}
@@ -123,6 +110,17 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 		all_types.erase("System.Single");
 		all_types.erase("System.Double");
 
+		ss << "#include \"System/primitives.hpp\"\n";
+		ss << "#include \"common/CallCached.hpp\"\n";
+		ss << "#include \"il2cpp/Class.hpp\"\n";
+		ss << "#include \"il2cpp/ClassFinder.hpp\"\n";
+		if (parsed.any_icall)
+			ss << "#include \"il2cpp/il2cpp.hpp\"\n";
+		if (parsed.any_method)
+			ss << "#include \"il2cpp/Method.hpp\"\n";
+		ss << "\n";
+		ss << "#include <cassert>\n\n";
+
 		for (const auto& type : all_types)
 			ss << "#include \"" << ReplaceAll(type, ".", "/") << ".hpp\"\n";
 
@@ -137,17 +135,13 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 			if (!cl.is_gen_finder)
 				continue;
 
-			ss << "template <>\n";
-			ss << "struct il2cpp::FindClassOnce<" << ns.name << "::" << cl.name << ">\n";
+			ss << "const il2cpp::Class* il2cpp::FindClassOnce<" << ns.name << "::" << cl.name << ">::Find()\n";
 			ss << "{\n";
-			ss << "\tstatic const Class* Find()\n";
-			ss << "\t{\n";
-			ss << "\t\tauto klass = CallCached<decltype([]() { ";
+			ss << "\tauto klass = CallCached<decltype([]() { ";
 			ss << "return il2cpp::Class::Find(\"" << NormalizeType(ns.name) << "\", \"" << cl.name << "\");";
 			ss << " })>(); assert(klass);\n";
-			ss << "\t\treturn klass;\n";
-			ss << "\t}\n";
-			ss << "};\n\n";
+			ss << "\treturn klass;\n";
+			ss << "}\n\n";
 		}
 	}
 
@@ -173,9 +167,37 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 				ss << "{\n";
 
-				ss << "\tauto func = ";
+				if (m.is_virtual)
+					ss << "\tauto vmethod = ";
+				else
+					ss << "\tauto func = ";
 
 				ss << "CallCached<decltype([]() {\n";
+
+				auto add_method_ptr = [&](std::string_view var_name) {
+					ss << "\tauto " << var_name << " = method->template GetMethodPointer<";
+					ss << m.ret_type << "(";
+
+					if (!m.is_static)
+					{
+						ss << "decltype(this)";
+
+						if (!m.parameters.empty())
+							ss << ", ";
+					}
+
+					for (size_t i = 0; i < m.parameters.size(); ++i)
+					{
+						ss << m.parameters[i];
+
+						if (i < m.parameters.size() - 1)
+							ss << ", ";
+					}
+
+					ss << ")";
+
+					ss << ">(); assert(" << var_name << ");\n";
+				};
 
 				if (m.is_icall)
 				{
@@ -207,7 +229,10 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 				else
 				{
 					ss << "\t\tauto klass = il2cpp::FindClassOnce<" << ns.name << "::" << cl.name << ">::Find(); assert(klass);\n";
-					ss << "\t\tauto method = klass->FindMethod(";
+					if (m.is_virtual)
+						ss << "\t\tauto vmethod = klass->FindMethod(";
+					else
+						ss << "\t\tauto method = klass->FindMethod(";
 					ss << "\"" << NormalizeMethodName(m.name) << "\", ";
 					ss << "\"" << NormalizeType(ReplaceAll(m.ret_type, ignore_class, "")) << "\", ";
 
@@ -225,36 +250,30 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 					ss << "" << (m.is_static ? "true" : "false");
 
-					ss << "); assert(method);\n";
-					ss << "\t\tauto method_ptr = method->template GetMethodPointer<";
+					if (m.is_virtual)
+						ss << "); assert(vmethod);\n";
+					else
+						ss << "); assert(method);\n";
 
+					if (m.is_virtual)
 					{
-						ss << m.ret_type << "(";
-
-						if (!m.is_static)
-						{
-							ss << "decltype(this)";
-
-							if (!m.parameters.empty())
-								ss << ", ";
-						}
-
-						for (size_t i = 0; i < m.parameters.size(); ++i)
-						{
-							ss << m.parameters[i];
-
-							if (i < m.parameters.size() - 1)
-								ss << ", ";
-						}
-
-						ss << ")";
+						ss << "\t\treturn vmethod;\n";
 					}
-
-					ss << ">(); assert(method_ptr);\n";
-					ss << "\t\treturn method_ptr;\n";
+					else
+					{
+						ss << "\t";
+						add_method_ptr("method_ptr");
+						ss << "\t\treturn method_ptr;\n";
+					}
 				}
 
-				ss << "\t})>();\n\n";
+				ss << "\t})>();\n";
+
+				if (m.is_virtual)
+				{
+					ss << "\tauto method = GetClass()->GetVirtualMethod(vmethod); assert(method);\n";
+					add_method_ptr("func");
+				}
 
 				ss << "\treturn func(";
 

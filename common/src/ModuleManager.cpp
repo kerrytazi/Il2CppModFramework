@@ -67,6 +67,21 @@ void ModuleManager::RequestUnload()
 		if (check != ELoadState::DoUnload)
 			throw std::runtime_error("ModuleManager::RequestUnload failed. Invalid state: " + std::to_string((int)check));
 	}
+
+	// Unload early.
+	// Because we need to destroy detour on another thread.
+	if (use_imgui_)
+		UnloadImGui();
+}
+
+bool ModuleManager::IsUnloading() const
+{
+	return load_state_ == ELoadState::DoUnload;
+}
+
+bool ModuleManager::IsUnloaded() const
+{
+	return load_state_ == ELoadState::Unloaded;
 }
 
 #ifdef UC_ENABLE_IMGUI
@@ -329,11 +344,6 @@ void ModuleManager::OnPostUpdate()
 		SaveConfig();
 
 		_Il2CppDisableUpdate();
-
-#ifdef UC_ENABLE_IMGUI
-		if (use_imgui_)
-			UnloadImGui();
-#endif // UC_ENABLE_IMGUI
 
 #if defined(UC_DLL_INJECTOR)
 		_StartUnloadLibrary();

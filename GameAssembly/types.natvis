@@ -8,29 +8,11 @@
 		</Expand>
 	</Type>
 
-	<!--
-	<Type Name="il2cpp::Class">
-		<DisplayString Condition="initialized">{name,s8}</DisplayString>
-		<DisplayString Condition="!initialized">{name,s8} [Not Initialized]</DisplayString>
-		<Expand>
-			<Item Name="name">name,s8</Item>
-			<Item Name="namespace">namespaze,s8</Item>
-			<Item Name="methods" Condition="initialized">methods,[method_count]</Item>
-			<Item Name="methods" Condition="!initialized">"[Not Initialized]"</Item>
-			<Item Name="fields" Condition="initialized">fields,[field_count]</Item>
-			<Item Name="fields" Condition="!initialized">"[Not Initialized]"</Item>
-			<Item Name="properties" Condition="initialized">properties,[property_count]</Item>
-			<Item Name="properties" Condition="!initialized">"[Not Initialized]"</Item>
-			<Item Name="events" Condition="initialized">events,[event_count]</Item>
-			<Item Name="events" Condition="!initialized">"[Not Initialized]"</Item>
-		</Expand>
-	</Type>
-	-->
-
 	<Type Name="il2cpp::Class">
 		<DisplayString>{name,s8}</DisplayString>
 		<Expand>
 			<Item Name="name">name,s8</Item>
+			<Item Name="base">parent</Item>
 			<Item Name="namespace">namespaze,s8</Item>
 			<Item Name="methods">methods,[method_count]</Item>
 			<Item Name="fields">fields,[field_count]</Item>
@@ -105,6 +87,7 @@
 		<DisplayString>{klass->name,s8}</DisplayString>
 		<Expand>
 			<Item Name="[class]">klass</Item>
+			<Item Name="[element]">klass->element_class</Item>
 
 			<CustomListItems>
 				<Variable Name="i" InitialValue="0" />
@@ -165,6 +148,20 @@
 			</CustomListItems>
 		</Expand>
 	</Type>
+
+	<Type Name="il2cpp::Array&lt;*&gt;">
+		<Intrinsic Name="size" Expression="bounds ? bounds->length : max_length" />
+		<DisplayString>{klass->name,s8} ({size()})</DisplayString>
+		<Expand>
+			<ExpandedItem>*(System::Object*)this</ExpandedItem>
+			<Item Name="[size]">size()</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>($T1*)&amp;first_val</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	
 	<Type Name="System::String">
 		<DisplayString>{(char16_t*)(&amp;firstChar),[length]}</DisplayString>
 		<Expand>
@@ -172,6 +169,7 @@
 			<Item Name="length">length</Item>
 		</Expand>
 	</Type>
+	
 	<Type Name="System::Exception">
 		<DisplayString>{message}</DisplayString>
 		<Expand>
@@ -196,6 +194,7 @@
 			<ExpandedItem>*(System::Object*)this</ExpandedItem>
 		</Expand>
 	</Type>
+
 	<Type Name="UnityEngine::GameObject">
 		<DisplayString>{klass->name,s8}</DisplayString>
 		<Expand>

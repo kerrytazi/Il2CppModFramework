@@ -1,31 +1,54 @@
 #pragma once
 
 #include "System/Object.hpp"
+#include "il2cpp/ClassFinder.hpp"
+
+#include <type_traits>
 
 namespace il2cpp
 {
+
+System::Object* _ArrayNew(const il2cpp::Class* element_class, size_t size);
 
 template <typename T>
 class Array : System::Object
 {
 public:
 
+	static Array<T>* New(size_t size)
+	{
+		return (Array<T>*)_ArrayNew(FindClassOnce<std::remove_pointer_t<T>>::Find(), size);
+	}
+
+	static Array<T>* New(std::initializer_list<T> values)
+	{
+		auto arr = New(values.size());
+
+		for (size_t i = 0; i < values.size(); ++i)
+			arr->at(i) = values.begin()[i];
+
+		return arr;
+	}
+
 	size_t Length() const { return bounds ? bounds->length : max_length; }
 
 	const void* Data() const { return &first_val; }
 	void* Data() { return &first_val; }
 
-	T& operator[](size_t index)
+	T& at(size_t index)
 	{
 		assert(index < Length());
 		return begin()[index];
 	}
 
-	const T& operator[](size_t index) const
+	const T& at(size_t index) const
 	{
 		assert(index < Length());
 		return begin()[index];
 	}
+
+	T& operator[](size_t index) { return at(index); }
+	const T& operator[](size_t index) const { return at(index); }
 
 	T* begin() { return (T*)Data(); }
 	T* end() { return ((T*)Data()) + Length(); }

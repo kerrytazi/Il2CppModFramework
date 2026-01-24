@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 namespace templates
 {
 
@@ -16,6 +18,9 @@ template <typename TRet, typename... TArgs>
 struct func<TRet(TArgs...)>
 {
 	using pointer = TRet(*)(TArgs...);
+	using args = std::tuple<TArgs...>;
+	using ret_type = TRet;
+	static constexpr size_t arity = sizeof...(TArgs);
 };
 
 } // namespace templates

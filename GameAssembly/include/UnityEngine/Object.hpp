@@ -18,9 +18,9 @@ public:
 	__autogen static System::Void Destroy(UnityEngine::Object* obj);
 	__autogen static System::Void DontDestroyOnLoad(UnityEngine::Object* obj);
 
-	bool _IsValid()
+	bool _IsValid() const
 	{
-		return (intptr_t)this != 0 && m_CachedPtr != 0;
+		return (intptr_t)this != 0 && m_CachedPtr.val != 0;
 	}
 
 private:

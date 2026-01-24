@@ -9,6 +9,13 @@
 #include "il2cpp_data.hpp"
 
 #include "il2cpp/Image.hpp"
+
+uint16_t il2cpp::Method::GetVirtualMethodSlot() const
+{
+	assert(IsVirtual());
+	return slot;
+}
+
 const il2cpp::Method* il2cpp::Method::Find(
 	std::string_view namespaze,
 	std::string_view class_name,

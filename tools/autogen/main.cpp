@@ -34,7 +34,7 @@ int main(int argc, const char** argv)
 	std::string input_path = argv[1];
 	std::string output_path = argv[2];
 #else
-	std::string input_path = "../../../../GameAssembly/src/il2cpp/il2cpp_data.hpp";
+	std::string input_path = "../../../../GameAssembly/include/System/Threading/ThreadPool.hpp";
 	std::string output_path = "test.out";
 #endif // 0
 
