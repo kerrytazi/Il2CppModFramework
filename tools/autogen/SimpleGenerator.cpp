@@ -140,6 +140,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 			ss << "\tauto klass = CallCached<decltype([]() { ";
 			ss << "return il2cpp::Class::Find(\"" << NormalizeType(ns.name) << "\", \"" << cl.name << "\");";
 			ss << " })>(); assert(klass);\n";
+			ss << "\tklass->_ForceInitFull();\n";
 			ss << "\treturn klass;\n";
 			ss << "}\n\n";
 		}
@@ -228,7 +229,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 				}
 				else
 				{
-					ss << "\t\tauto klass = il2cpp::FindClassOnce<" << ns.name << "::" << cl.name << ">::Find(); assert(klass);\n";
+					ss << "\t\tauto klass = il2cpp::Find<" << ns.name << "::" << cl.name << ">(); assert(klass);\n";
 					if (m.is_virtual)
 						ss << "\t\tauto vmethod = klass->FindMethod(";
 					else

@@ -81,7 +81,7 @@ public:
 	System::Void _ctor(System::Object* object, System::IntPtr method)
 	{
 		auto func = CallCached<decltype([]() {
-			auto klass = il2cpp::FindClassOnce<Func<TArgsAndRet...>>::Find(); assert(klass);
+			auto klass = il2cpp::Find<Func<TArgsAndRet...>>(); assert(klass);
 			auto method = klass->FindMethod(".ctor", "System.Void", { "System.Object", "System.IntPtr" }, false); assert(method);
 			auto method_ptr = method->template GetMethodPointer<System::Void(decltype(this), System::Object*, System::IntPtr)>(); assert(method_ptr);
 			return method_ptr;
@@ -93,7 +93,7 @@ public:
 	static Func<TArgsAndRet...>* New(_Helper::function_pointer_type func)
 	{
 		auto method = __CreateMethodInfoForFunc(func, _Helper::count - 1);
-		auto obj = (Func<TArgsAndRet...>*)il2cpp::object_new(il2cpp::FindClassOnce<Func<TArgsAndRet...>>::Find());
+		auto obj = (Func<TArgsAndRet...>*)il2cpp::object_new(il2cpp::Find<Func<TArgsAndRet...>>());
 		obj->_ctor(nullptr, System::IntPtr{ (intptr_t)method });
 		return obj;
 	}
@@ -110,13 +110,15 @@ struct il2cpp::FindClassOnce<System::Func<TArgsAndRet...>>
 	{
 		auto gklass = CallCached<decltype([]() {
 			auto klass = __FindFuncClass(_Helper::count);
+			klass->_ForceInitFull();
 			auto type_args = il2cpp::Array<System::Type*>::New(_Helper::count);
 
 			[&]<size_t... I>(std::index_sequence<I...>) {
-				((type_args->at(I) = il2cpp::FindClassOnce<std::remove_pointer_t<typename std::tuple_element<I, std::tuple<TArgsAndRet...>>::type>>::Find()->GetType()->ToSystemType()), ...);
+				((type_args->at(I) = il2cpp::Find<std::remove_pointer_t<typename std::tuple_element<I, std::tuple<TArgsAndRet...>>::type>>()->GetType()->ToSystemType()), ...);
 			}(std::make_index_sequence<_Helper::count>());
 
 			auto gklass = klass->GetType()->ToSystemType()->MakeGenericType(type_args)->ToIl2CppType()->ToClass();
+			gklass->_ForceInitFull();
 			return gklass;
 		})>();
 		return gklass;

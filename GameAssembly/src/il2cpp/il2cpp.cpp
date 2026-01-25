@@ -23,7 +23,13 @@ static size_t GetTotalClassesCount()
 
 static void Il2CppInitCaches()
 {
+	assert(g_il2cpp_data.GameAssembly);
+
 	Log::Debug("Il2CppInitCaches");
+
+	// Causes long loading and rarely needed.
+	// Use Class::_ForceInit*() before using Class.
+	// g_il2cpp_data.il2cpp_init("IL2CPP Root Domain");
 
 	g_il2cpp_data.cached_classes.reserve(GetTotalClassesCount());
 

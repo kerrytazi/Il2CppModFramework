@@ -11,7 +11,7 @@ UnityEngine::Events::UnityAction* UnityEngine::Events::UnityAction::New(void(*fu
 	method.virtualMethodPointer = func;
 	method.parameters_count = 0;
 	method.flags = 0x0010; // METHOD_ATTRIBUTE_STATIC
-	auto obj = (UnityEngine::Events::UnityAction*)il2cpp::object_new(il2cpp::FindClassOnce<UnityEngine::Events::UnityAction>::Find());
+	auto obj = (UnityEngine::Events::UnityAction*)il2cpp::object_new(il2cpp::Find<UnityEngine::Events::UnityAction>());
 	obj->_ctor(nullptr, std::bit_cast<System::IntPtr>(&method));
 	return obj;
 }

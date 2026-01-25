@@ -11,7 +11,7 @@ System::Threading::WaitCallback* System::Threading::WaitCallback::New(void(*func
 	method.virtualMethodPointer = func;
 	method.parameters_count = 0;
 	method.flags = 0x0010; // METHOD_ATTRIBUTE_STATIC
-	auto obj = (WaitCallback*)il2cpp::object_new(il2cpp::FindClassOnce<WaitCallback>::Find());
+	auto obj = (WaitCallback*)il2cpp::object_new(il2cpp::Find<WaitCallback>());
 	obj->_ctor(nullptr, std::bit_cast<System::IntPtr>(&method));
 	return obj;
 }

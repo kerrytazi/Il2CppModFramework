@@ -98,6 +98,61 @@ const il2cpp::Class* il2cpp::Class::Find(std::string_view namespaze, std::string
 	return cit->klass;
 }
 
+void il2cpp::Class::_ForceInitFull() const
+{
+	if (initialized)
+		return;
+
+	(void)GetType()->ToClass();
+
+	if (auto k = GetBase())
+		k->_ForceInitFull();
+
+	if (auto k = GetElementClass())
+		k->_ForceInitFull();
+
+	_ForceInitMethods();
+	_ForceInitFields();
+	_ForceInitProperties();
+	_ForceInitEvents();
+}
+
+void il2cpp::Class::_ForceInitMethods() const
+{
+	if (initialized || method_count == 0 || methods)
+		return;
+
+	void* it = nullptr;
+	g_il2cpp_data.il2cpp_class_get_methods(const_cast<il2cpp::Class*>(this), &it);
+}
+
+void il2cpp::Class::_ForceInitFields() const
+{
+	if (initialized || field_count == 0 || fields)
+		return;
+
+	void* it = nullptr;
+	g_il2cpp_data.il2cpp_class_get_fields(const_cast<il2cpp::Class*>(this), &it);
+}
+
+void il2cpp::Class::_ForceInitProperties() const
+{
+	if (initialized || property_count == 0 || properties)
+		return;
+
+	void* it = nullptr;
+	g_il2cpp_data.il2cpp_class_get_properties(const_cast<il2cpp::Class*>(this), &it);
+}
+
+void il2cpp::Class::_ForceInitEvents() const
+{
+	if (initialized || event_count == 0 || events)
+		return;
+
+	void* it = nullptr;
+	g_il2cpp_data.il2cpp_class_get_events(const_cast<il2cpp::Class*>(this), &it);
+}
+
 const il2cpp::Method* il2cpp::Class::FindMethod(
 	std::string_view method_name,
 	std::string_view ret_type,

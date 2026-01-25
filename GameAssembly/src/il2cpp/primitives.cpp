@@ -10,6 +10,7 @@
 const il2cpp::Class* il2cpp::FindClassOnce<System::_Type>::Find() \
 { \
 	auto klass = CallCached<decltype([]() { return il2cpp::Class::Find("System", #_Type); })>(); assert(klass); \
+	klass->_ForceInitFull(); \
 	return klass; \
 }
 

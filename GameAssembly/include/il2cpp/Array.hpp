@@ -17,7 +17,7 @@ public:
 
 	static Array<T>* New(size_t size)
 	{
-		return (Array<T>*)_ArrayNew(FindClassOnce<std::remove_pointer_t<T>>::Find(), size);
+		return (Array<T>*)_ArrayNew(Find<std::remove_pointer_t<T>>(), size);
 	}
 
 	static Array<T>* New(std::initializer_list<T> values)

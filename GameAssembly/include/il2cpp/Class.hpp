@@ -29,7 +29,6 @@ public:
 	std::span<const Property> GetProperties() const;
 	std::span<const Event> GetEvents() const;
 
-
 	const Method* GetVirtualMethod(const Method* method) const;
 
 	const Class* GetDeclaringClass() const;
@@ -44,6 +43,12 @@ public:
 		std::optional<bool> is_static = std::nullopt) const;
 
 	static const Class* Find(std::string_view namespaze, std::string_view class_name);
+
+	void _ForceInitFull() const;
+	void _ForceInitMethods() const;
+	void _ForceInitFields() const;
+	void _ForceInitProperties() const;
+	void _ForceInitEvents() const;
 
 private:
 
