@@ -36,17 +36,63 @@ public:
 	const Class* GetBase() const;
 	const bool IsBaseOf(const Class* _derived) const;
 
+	const Method* FindMethod(std::string_view method_name) const
+	{
+		return _FindMethod(method_name);
+	}
+
+	const Method* FindMethod(
+		std::string_view method_name,
+		std::string_view ret_type) const
+	{
+		return _FindMethod(method_name, ret_type);
+	}
+
+	const Method* FindMethod(
+		std::string_view method_name,
+		std::string_view ret_type,
+		std::initializer_list<std::string_view> param_types) const
+	{
+		return _FindMethod(method_name, ret_type, param_types);
+	}
+
 	const Method* FindMethod(
 		std::string_view method_name,
 		std::string_view ret_type,
 		std::initializer_list<std::string_view> param_types,
-		std::optional<bool> is_static = std::nullopt) const;
+		bool is_static) const
+	{
+		return _FindMethod(method_name, ret_type, param_types, is_static);
+	}
+
+	const Method* FindMethodRecursive(std::string_view method_name) const
+	{
+		return _FindMethodRecursive(method_name);
+	}
+
+	const Method* FindMethodRecursive(
+		std::string_view method_name,
+		std::string_view ret_type) const
+	{
+		return _FindMethodRecursive(method_name, ret_type);
+	}
+
+	const Method* FindMethodRecursive(
+		std::string_view method_name,
+		std::string_view ret_type,
+		std::initializer_list<std::string_view> param_types) const
+	{
+		return _FindMethodRecursive(method_name, ret_type, param_types);
+	}
 
 	const Method* FindMethodRecursive(
 		std::string_view method_name,
 		std::string_view ret_type,
 		std::initializer_list<std::string_view> param_types,
-		std::optional<bool> is_static = std::nullopt) const;
+		bool is_static) const
+	{
+		return _FindMethodRecursive(method_name, ret_type, param_types, is_static);
+	}
 
 	static const Class* Find(std::string_view namespaze, std::string_view class_name);
 
@@ -57,6 +103,18 @@ public:
 	void _ForceInitEvents() const;
 
 private:
+
+	const Method* _FindMethod(
+		std::string_view method_name,
+		std::optional<std::string_view> ret_type = std::nullopt,
+		std::optional<std::initializer_list<std::string_view>> param_types = std::nullopt,
+		std::optional<bool> is_static = std::nullopt) const;
+
+	const Method* _FindMethodRecursive(
+		std::string_view method_name,
+		std::optional<std::string_view> ret_type = std::nullopt,
+		std::optional<std::initializer_list<std::string_view>> param_types = std::nullopt,
+		std::optional<bool> is_static = std::nullopt) const;
 
 	struct Il2CppVirtualInvokeData
 	{

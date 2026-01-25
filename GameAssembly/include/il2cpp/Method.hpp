@@ -48,14 +48,6 @@ public:
 	template <typename TFunc>
 	auto GetMethodPointer() const { return reinterpret_cast<typename templates::func<TFunc>::pointer>(_GetMethodPointer()); }
 
-	static const Method* Find(
-		std::string_view namespaze,
-		std::string_view class_name,
-		std::string_view method_name,
-		std::string_view ret_type,
-		std::initializer_list<std::string_view> param_types,
-		std::optional<bool> is_static = std::nullopt);
-
 private:
 
 	using Il2CppMethodPointer = void(*)();

@@ -153,39 +153,44 @@ void il2cpp::Class::_ForceInitEvents() const
 	g_il2cpp_data.il2cpp_class_get_events(const_cast<il2cpp::Class*>(this), &it);
 }
 
-const il2cpp::Method* il2cpp::Class::FindMethod(
+const il2cpp::Method* il2cpp::Class::_FindMethod(
 	std::string_view method_name,
-	std::string_view ret_type,
-	std::initializer_list<std::string_view> param_types,
+	std::optional<std::string_view> ret_type /*= std::nullopt*/,
+	std::optional<std::initializer_list<std::string_view>> param_types /*= std::nullopt*/,
 	std::optional<bool> is_static /*= std::nullopt*/) const
 {
 	for (auto method : GetMethods())
 	{
-		if (method->GetParametersCount() != param_types.size())
-			continue;
+		if (param_types.has_value())
+			if (method->GetParametersCount() != param_types->size())
+				continue;
 
 		if (is_static.has_value())
-			if (is_static != method->IsStatic())
+			if (*is_static != method->IsStatic())
 				continue;
 
 		if (method->GetName() != method_name)
 			continue;
 
-		if (method->GetReturnType()->GetName() != ret_type)
-			continue;
+		if (ret_type.has_value())
+			if (method->GetReturnType()->GetName() != *ret_type)
+				continue;
 
-		auto params_view = method->GetParameterTypesView();
-
-		auto it1 = param_types.begin();
-		auto it2 = params_view.begin();
-		for (; it1 != param_types.end(); ++it1, ++it2)
+		if (param_types.has_value())
 		{
-			if ((*it2)->GetName() != *it1)
-				break;
-		}
+			auto params_view = method->GetParameterTypesView();
 
-		if (it1 != param_types.end())
-			continue;
+			auto it1 = param_types->begin();
+			auto it2 = params_view.begin();
+			for (; it1 != param_types->end(); ++it1, ++it2)
+			{
+				if ((*it2)->GetName() != *it1)
+					break;
+			}
+
+			if (it1 != param_types->end())
+				continue;
+		}
 
 		return method;
 	}
@@ -193,17 +198,17 @@ const il2cpp::Method* il2cpp::Class::FindMethod(
 	return nullptr;
 }
 
-const il2cpp::Method* il2cpp::Class::FindMethodRecursive(
+const il2cpp::Method* il2cpp::Class::_FindMethodRecursive(
 	std::string_view method_name,
-	std::string_view ret_type,
-	std::initializer_list<std::string_view> param_types,
+	std::optional<std::string_view> ret_type /*= std::nullopt*/,
+	std::optional<std::initializer_list<std::string_view>> param_types /*= std::nullopt*/,
 	std::optional<bool> is_static /*= std::nullopt*/) const
 {
 	auto k = this;
 
 	while (k)
 	{
-		if (auto m = k->FindMethod(method_name, ret_type, param_types, is_static))
+		if (auto m = k->_FindMethod(method_name, ret_type, param_types, is_static))
 			return m;
 
 		k = k->GetBase();
