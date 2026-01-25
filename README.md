@@ -9,8 +9,7 @@
     - [CMake](#cmake)
       - [Configure](#configure)
       - [Compilation](#compilation)
-    - [Visual Studio's “Open Folder” development](#visual-studios-open-folder-development)
-  - [*(Optional)* Remove unnecessary folders from libs](#optional-remove-unnecessary-folders-from-libs)
+    - [Visual Studio](#visual-studio)
 - [CMake settings](#cmake-settings)
   - [Example](#example)
   - [Full list of options](#full-list-of-options)
@@ -63,12 +62,13 @@ Module can override any of:
 In the `loggers` folder *(or anywhere else inside `clients/my-mod` folder)* you can implement custom loggers.
 These are called each time you call any function from the `Log` namespace.
 
-Each Logger must be inherited from `Logger`. And should be registered using `RegisterLoggerStatic` for proper working.
+Each Logger must be inherited from `Logger`. And should be registered using `RegisterLoggerStatic` to work properly.
 
 **NOTE**: You can set log order priority using `RegisterLoggerStatic` second template argument.
 
 Logger can override any of:
 - `virtual void AddLine(Level level, Type type, std::initializer_list<cs::StyledString> line)` - Called each time you call any function from the `Log` namespace.
+- `virtual void Flush()` - Flush any cached info. Usually called after `Unload` or during crash handler.
 It's up to you to filter messages by their `level` and `type`.
 
 # Developing
@@ -93,13 +93,11 @@ git submodule update --init --filter=blob:none
 
 See [CMake settings](#cmake-settings) for more information.
 
-### Visual Studio's “Open Folder” development
-- Open a local folder.
+### Visual Studio
+- Open a Visual Studio -> Get started -> Open a local folder
 - Select the `example_client` target and compile it.
-
-## *(Optional)* Remove unnecessary folders from libs
-- `libs/imgui/examples` due to [this bug](https://developercommunity.visualstudio.com/t/Visual-Studio-scans-for-sln-files-when/11026224).
-- `libs/json/tools/` because Visual Studio searches for invalid `.natvis` files inside it.
+- *(Optional)* Remove `libs/imgui/examples` due to [this bug](https://developercommunity.visualstudio.com/t/Visual-Studio-scans-for-sln-files-when/11026224).
+- *(Optional)* Remove `libs/json/tools/` because Visual Studio searches for invalid `.natvis` files inside it.
 
 # CMake settings
 You can pass additional options to cmake during configuration.
@@ -112,5 +110,6 @@ You can pass additional options to cmake during configuration.
 |-|-|-|
 |`UC_ENABLE_IMGUI`|Enable ImGui|`[ON]/OFF`|
 |`UC_LOADER`|Loader type|`[DLL_INJECTOR]/MANUAL_MAPPER`|
+
 
 
