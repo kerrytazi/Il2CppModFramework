@@ -192,3 +192,22 @@ const il2cpp::Method* il2cpp::Class::FindMethod(
 
 	return nullptr;
 }
+
+const il2cpp::Method* il2cpp::Class::FindMethodRecursive(
+	std::string_view method_name,
+	std::string_view ret_type,
+	std::initializer_list<std::string_view> param_types,
+	std::optional<bool> is_static /*= std::nullopt*/) const
+{
+	auto k = this;
+
+	while (k)
+	{
+		if (auto m = k->FindMethod(method_name, ret_type, param_types, is_static))
+			return m;
+
+		k = k->GetBase();
+	}
+
+	return nullptr;
+}

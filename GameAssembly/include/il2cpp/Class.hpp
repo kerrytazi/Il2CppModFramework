@@ -42,6 +42,12 @@ public:
 		std::initializer_list<std::string_view> param_types,
 		std::optional<bool> is_static = std::nullopt) const;
 
+	const Method* FindMethodRecursive(
+		std::string_view method_name,
+		std::string_view ret_type,
+		std::initializer_list<std::string_view> param_types,
+		std::optional<bool> is_static = std::nullopt) const;
+
 	static const Class* Find(std::string_view namespaze, std::string_view class_name);
 
 	void _ForceInitFull() const;
