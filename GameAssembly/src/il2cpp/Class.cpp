@@ -108,7 +108,7 @@ void il2cpp::Class::_ForceInitFull() const
 	if (auto k = GetBase())
 		k->_ForceInitFull();
 
-	if (auto k = GetElementClass())
+	if (auto k = GetElementClass(); k && k != this)
 		k->_ForceInitFull();
 
 	_ForceInitMethods();
