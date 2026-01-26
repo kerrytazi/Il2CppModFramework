@@ -3,9 +3,13 @@
 #include "common/NoImplement.hpp"
 
 #include "il2cpp/Type.hpp"
+#include "il2cpp/Method.hpp"
+#include "il2cpp/Field.hpp"
 
 #include <string_view>
+#include <optional>
 #include <span>
+#include <cassert>
 
 namespace il2cpp
 {
@@ -35,6 +39,20 @@ public:
 	const Class* GetElementClass() const;
 	const Class* GetBase() const;
 	const bool IsBaseOf(const Class* _derived) const;
+
+	// Slow!!!
+	// Consider caching method search via CallCached.
+	template <typename TRet, typename... TArgs>
+	TRet DynamicStaticInvoke(std::string_view method_name, TArgs... args)
+	{
+		auto method = FindMethodRecursive(method_name);
+		assert(method);
+
+		auto method_ptr = method->GetMethodPointer<TRet(std::remove_reference_t<TArgs>...)>();
+		assert(method_ptr);
+
+		return method_ptr(args...);
+	}
 
 	const Method* FindMethod(std::string_view method_name) const
 	{

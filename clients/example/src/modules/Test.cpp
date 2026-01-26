@@ -33,6 +33,13 @@ public:
 
 private:
 
+	void TestInvokeMethod()
+	{
+		auto str = "Hello world"_il2;
+		auto result = str->DynamicInvoke<System::String*>("ToString");
+		Log::Debug("ToString result: '", result->AsU16StringView(), "'");
+	}
+
 	void TestDumpClass(const std::string& pref, const il2cpp::Class* klass)
 	{
 		Log::Debug("namespace '", klass->GetNamespace(), "' class '", klass->GetName(), "' 0x", klass);
@@ -135,7 +142,7 @@ private:
 		});
 
 		ExceptionGuarded("TestException game exception", [](){
-			auto method = il2cpp::Method::Find("UnityEngine", "GameObject", "get_scene", "UnityEngine.SceneManagement.Scene", {});
+			auto method = il2cpp::Class::Find("UnityEngine", "GameObject")->FindMethod("get_scene", "UnityEngine.SceneManagement.Scene", {});
 			auto method_ptr = method->GetMethodPointer<int(void*)>();
 			// Should throw null reference exception
 			// Since this method requires `this`
