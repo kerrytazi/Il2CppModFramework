@@ -82,6 +82,129 @@ const bool il2cpp::Class::IsBaseOf(const Class* _derived) const
 	return IsBaseOf(_derived->GetBase());
 }
 
+const il2cpp::Field* il2cpp::Class::FindField(std::string_view field_name) const
+{
+	for (const auto& field : GetFields())
+	{
+		if (field.IsStatic())
+			continue;
+
+		if (field.GetName() == field_name)
+			return &field;
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindFieldRecursive(std::string_view field_name) const
+{
+	auto k = this;
+
+	while (k)
+	{
+		if (auto f = k->FindField(field_name))
+			return f;
+
+		k = k->GetBase();
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindStaticField(std::string_view field_name) const
+{
+	for (const auto& field : GetFields())
+	{
+		if (!field.IsStatic())
+			continue;
+
+		assert("Tried to find static field but found static literal" && (!field.IsLiteral() || field.GetName() != field_name));
+		assert("Tried to find static field but found static thread local" && (!field.IsThreadLocal() || field.GetName() != field_name));
+
+		if (field.GetName() == field_name)
+			return &field;
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindStaticFieldRecursive(std::string_view field_name) const
+{
+	auto k = this;
+
+	while (k)
+	{
+		if (auto f = k->FindStaticField(field_name))
+			return f;
+
+		k = k->GetBase();
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindStaticLiteralField(std::string_view field_name) const
+{
+	for (const auto& field : GetFields())
+	{
+		if (!field.IsStatic())
+			continue;
+
+		assert("Tried to find static literal field but found static thread local" && (!field.IsThreadLocal() || field.GetName() != field_name));
+
+		if (field.GetName() == field_name)
+			return &field;
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindStaticLiteralFieldRecursive(std::string_view field_name) const
+{
+	auto k = this;
+
+	while (k)
+	{
+		if (auto f = k->FindStaticLiteralField(field_name))
+			return f;
+
+		k = k->GetBase();
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindStaticThreadLocalField(std::string_view field_name) const
+{
+	for (const auto& field : GetFields())
+	{
+		if (!field.IsStatic())
+			continue;
+
+		assert("Tried to find static thread local field but found static literal" && (!field.IsLiteral() || field.GetName() != field_name));
+
+		if (field.GetName() == field_name)
+			return &field;
+	}
+
+	return nullptr;
+}
+
+const il2cpp::Field* il2cpp::Class::FindStaticThreadLocalFieldRecursive(std::string_view field_name) const
+{
+	auto k = this;
+
+	while (k)
+	{
+		if (auto f = k->FindStaticThreadLocalField(field_name))
+			return f;
+
+		k = k->GetBase();
+	}
+
+	return nullptr;
+}
+
 const il2cpp::Class* il2cpp::Class::Find(std::string_view namespaze, std::string_view class_name)
 {
 	assert(g_il2cpp_data.GameAssembly);

@@ -42,6 +42,9 @@ void MyIl2CppData::Init()
 	init_func(il2cpp_type_get_object);
 	init_func(il2cpp_class_from_type);
 
+	init_func(il2cpp_field_static_get_value);
+	init_func(il2cpp_field_static_set_value);
+
 	init_func(il2cpp_gchandle_new);
 	init_func(il2cpp_gchandle_new_weakref);
 	init_func(il2cpp_gchandle_get_target);

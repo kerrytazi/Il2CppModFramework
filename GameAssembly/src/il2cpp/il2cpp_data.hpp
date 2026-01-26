@@ -55,6 +55,9 @@ struct MyIl2CppData
 	System::Object* (*il2cpp_type_get_object)(const il2cpp::Type *type);
 	il2cpp::Class* (*il2cpp_class_from_type)(const il2cpp::Type* type);
 
+	void (*il2cpp_field_static_get_value)(const il2cpp::Field* field, void* out);
+	void (*il2cpp_field_static_set_value)(const il2cpp::Field* field, void* in);
+
 	uint32_t (*il2cpp_gchandle_new)(System::Object* obj, bool pinned);
 	uint32_t (*il2cpp_gchandle_new_weakref)(System::Object* obj, bool track_resurrection);
 	System::Object* (*il2cpp_gchandle_get_target)(uint32_t gchandle);

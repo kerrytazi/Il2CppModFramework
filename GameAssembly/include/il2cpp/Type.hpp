@@ -10,6 +10,7 @@ namespace il2cpp
 {
 
 class Class;
+class Field;
 
 class Type : _NoImplement
 {
@@ -21,6 +22,8 @@ public:
 	const Class* ToClass() const;
 
 private:
+
+	friend class Field;
 
 	enum class Il2CppTypeEnum
 	{

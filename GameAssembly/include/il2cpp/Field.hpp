@@ -21,6 +21,13 @@ public:
 	size_t GetOffset() const { return offset; }
 	const Type* GetType() const { return type; }
 
+	bool IsStatic() const;
+	bool IsLiteral() const;
+	bool IsThreadLocal() const;
+
+	void GetLiteral(void* out) const;
+	void GetThreadLocal(void* out) const;
+
 private:
 
 	const char* name;
@@ -44,7 +51,7 @@ private:
 	static const uint16_t FIELD_ATTRIBUTE_SPECIAL_NAME          = 0x0200;
 	static const uint16_t FIELD_ATTRIBUTE_PINVOKE_IMPL          = 0x2000;
 
-/* For runtime use only */
+	/* For runtime use only */
 	static const uint16_t FIELD_ATTRIBUTE_RESERVED_MASK         = 0x9500;
 	static const uint16_t FIELD_ATTRIBUTE_RT_SPECIAL_NAME       = 0x0400;
 	static const uint16_t FIELD_ATTRIBUTE_HAS_FIELD_MARSHAL     = 0x1000;

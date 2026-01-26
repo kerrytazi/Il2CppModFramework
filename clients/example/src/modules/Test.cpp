@@ -33,6 +33,15 @@ public:
 
 private:
 
+	void TestDynamicField()
+	{
+		auto str = "Hello world"_il2;
+		auto len = str->DynamicField<System::Int32>("_stringLength");
+		Log::Debug("_stringLength result: ", len);
+		Log::Debug("Empty result: ", str->GetClass()->DynamicStaticField<System::String*>("Empty"));
+		Log::Debug("PROBABILISTICMAP_SIZE result: ", str->GetClass()->DynamicStaticLiteralField<System::Int32>("PROBABILISTICMAP_SIZE"));
+	}
+
 	void TestInvokeMethod()
 	{
 		auto str = "Hello world"_il2;

@@ -40,24 +40,26 @@ public:
 	const Class* GetBase() const;
 	const bool IsBaseOf(const Class* _derived) const;
 
-	// Slow!!!
-	// Consider caching method search via CallCached.
-	template <typename TRet, typename... TArgs>
-	TRet DynamicStaticInvoke(std::string_view method_name, TArgs... args)
-	{
-		auto method = FindMethodRecursive(method_name);
-		assert(method);
-
-		auto method_ptr = method->GetMethodPointer<TRet(std::remove_reference_t<TArgs>...)>();
-		assert(method_ptr);
-
-		return method_ptr(args...);
-	}
-
 	const Method* FindMethod(std::string_view method_name) const
 	{
 		return _FindMethod(method_name);
 	}
+
+	// Non-static only
+	const Field* FindField(std::string_view field_name) const;
+	const Field* FindFieldRecursive(std::string_view field_name) const;
+
+	// Static only
+	const Field* FindStaticField(std::string_view field_name) const;
+	const Field* FindStaticFieldRecursive(std::string_view field_name) const;
+
+	// Static literal only
+	const Field* FindStaticLiteralField(std::string_view field_name) const;
+	const Field* FindStaticLiteralFieldRecursive(std::string_view field_name) const;
+
+	// Static thread local only
+	const Field* FindStaticThreadLocalField(std::string_view field_name) const;
+	const Field* FindStaticThreadLocalFieldRecursive(std::string_view field_name) const;
 
 	const Method* FindMethod(
 		std::string_view method_name,
@@ -113,6 +115,65 @@ public:
 	}
 
 	static const Class* Find(std::string_view namespaze, std::string_view class_name);
+
+	// Slow!!!
+	// Consider caching method search via CallCached.
+	template <typename TRet, typename... TArgs>
+	TRet DynamicStaticInvoke(std::string_view method_name, TArgs... args)
+	{
+		auto method = FindMethodRecursive(method_name);
+		assert(method);
+
+		auto method_ptr = method->GetMethodPointer<TRet(std::remove_reference_t<TArgs>...)>();
+		assert(method_ptr);
+
+		return method_ptr(args...);
+	}
+
+	// Slow!!!
+	// Consider caching result address via CallCached.
+	template <typename T>
+	T& DynamicStaticField(std::string_view field_name) const
+	{
+		assert(static_fields);
+
+		// No recursive search.
+		// Because each class have its own static_fields.
+		auto field = FindStaticField(field_name);
+		assert(field);
+
+		return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(static_fields) + field->GetOffset());
+	}
+
+	// Slow!!!
+	// Consider caching result via CallCached.
+	template <typename T>
+	T DynamicStaticLiteralField(std::string_view field_name) const
+	{
+		// No recursive search.
+		// Because each class have its own static_fields.
+		auto field = FindStaticLiteralField(field_name);
+		assert(field);
+
+		T result;
+		field->GetLiteral(&result);
+		return result;
+	}
+
+	// Slow!!!
+	// Consider caching result via CallCached.
+	template <typename T>
+	T DynamicStaticThreadLocalField(std::string_view field_name) const
+	{
+		// No recursive search.
+		// Because each class have its own static_fields.
+		auto field = FindStaticThreadLocalField(field_name);
+		assert(field);
+
+		T result;
+		field->GetThreadLocal(&result);
+		return result;
+	}
 
 	void _ForceInitFull() const;
 	void _ForceInitMethods() const;
