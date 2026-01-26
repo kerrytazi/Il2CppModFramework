@@ -35,6 +35,17 @@ public:
 		return method_ptr(this, args...);
 	}
 
+	// Slow!!!
+	// Consider declaring fields in your class.
+	template <typename T>
+	T& DynamicField(std::string_view field_name)
+	{
+		auto field = klass->FindFieldRecursive(field_name);
+		assert(field);
+
+		return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(this) + field->GetOffset());
+	}
+
 private:
 
 	const il2cpp::Class* klass;

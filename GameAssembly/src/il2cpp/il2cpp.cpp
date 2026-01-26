@@ -138,6 +138,18 @@ const il2cpp::Class* il2cpp::class_from_type(const Type* type)
 	return g_il2cpp_data.il2cpp_class_from_type(type);
 }
 
+const void il2cpp::field_static_get_value(const Field* field, void* out)
+{
+	assert(g_il2cpp_data.il2cpp_field_static_get_value);
+	return g_il2cpp_data.il2cpp_field_static_get_value(field, out);
+}
+
+const void il2cpp::field_static_set_value(const Field* field, void* in)
+{
+	assert(g_il2cpp_data.il2cpp_field_static_set_value);
+	return g_il2cpp_data.il2cpp_field_static_set_value(field, in);
+}
+
 intptr_t il2cpp::GetGameAssemblyBase()
 {
 	assert(g_il2cpp_data.GameAssembly);
