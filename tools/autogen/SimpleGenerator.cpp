@@ -114,7 +114,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 		ss << "#include \"common/CallCached.hpp\"\n";
 		ss << "#include \"il2cpp/Class.hpp\"\n";
 		ss << "#include \"il2cpp/ClassFinder.hpp\"\n";
-		if (parsed.any_icall)
+		if (parsed.any_icall || parsed.any_new)
 			ss << "#include \"il2cpp/il2cpp.hpp\"\n";
 		if (parsed.any_method)
 			ss << "#include \"il2cpp/Method.hpp\"\n";
@@ -168,12 +168,15 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 				ss << "{\n";
 
-				if (m.is_virtual)
-					ss << "\tauto vmethod = ";
-				else
-					ss << "\tauto func = ";
+				if (!m.is_new)
+				{
+					if (m.is_virtual)
+						ss << "\tauto vmethod = ";
+					else
+						ss << "\tauto func = ";
 
-				ss << "CallCached<decltype([]() {\n";
+					ss << "CallCached<decltype([]() {\n";
+				}
 
 				auto add_method_ptr = [&](std::string_view var_name) {
 					ss << "\tauto " << var_name << " = method->template GetMethodPointer<";
@@ -200,6 +203,24 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 					ss << ">(); assert(" << var_name << ");\n";
 				};
 
+				if (m.is_new)
+				{
+					ss << "\tauto obj = (";
+					ss << ns.name << "::" << cl.name << "*)il2cpp::object_new(il2cpp::Find<" << ns.name << "::" << cl.name << ">());\n";
+					ss << "\tobj->_ctor(";
+
+					for (size_t i = 0; i < m.parameters.size(); ++i)
+					{
+						ss << m.parameters[i];
+
+						if (i < m.parameters.size() - 1)
+							ss << ", ";
+					}
+
+					ss << ");\n";
+					ss << "\treturn obj;\n";
+				}
+				else
 				if (m.is_icall)
 				{
 					ss << "\t\tusing func_t = ";
@@ -268,33 +289,36 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 					}
 				}
 
-				ss << "\t})>();\n";
-
-				if (m.is_virtual)
+				if (!m.is_new)
 				{
-					ss << "\tauto method = GetClass()->GetVirtualMethod(vmethod); assert(method);\n";
-					add_method_ptr("func");
+					ss << "\t})>();\n";
+
+					if (m.is_virtual)
+					{
+						ss << "\tauto method = GetClass()->GetVirtualMethod(vmethod); assert(method);\n";
+						add_method_ptr("func");
+					}
+
+					ss << "\treturn func(";
+
+					if (!m.is_static)
+					{
+						ss << "this";
+
+						if (!m.parameters.empty())
+							ss << ", ";
+					}
+
+					for (size_t i = 0; i < m.parameters.size(); ++i)
+					{
+						ss << "a" << i;
+
+						if (i < m.parameters.size() - 1)
+							ss << ", ";
+					}
+
+					ss << ");\n";
 				}
-
-				ss << "\treturn func(";
-
-				if (!m.is_static)
-				{
-					ss << "this";
-
-					if (!m.parameters.empty())
-						ss << ", ";
-				}
-
-				for (size_t i = 0; i < m.parameters.size(); ++i)
-				{
-					ss << "a" << i;
-
-					if (i < m.parameters.size() - 1)
-						ss << ", ";
-				}
-
-				ss << ");\n";
 
 				ss << "}\n\n";
 			}

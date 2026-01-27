@@ -56,6 +56,7 @@ void SimpleParser::Parse()
 	bool want_name_namespace = false;
 	bool want_name_class = false;
 	bool want_autogen = false;
+	bool want_autogen_new = false;
 	bool want_autogen_icall = false;
 	bool want_autogen_virtual = false;
 	bool want_method_ret_type = false;
@@ -173,6 +174,18 @@ void SimpleParser::Parse()
 				continue;
 			}
 
+			if (TryReadToken("__autogen_new"))
+			{
+				if (want_name_class)
+					throw std::runtime_error("Invalid __autogen_new. Can't be declared for class");
+
+				want_whitespaces = true;
+				want_autogen_new = true;
+				result_.any_autogen = true;
+				result_.any_new = true;
+				continue;
+			}
+
 			if (TryReadToken("__autogen_icall"))
 			{
 				if (want_name_class)
@@ -281,6 +294,19 @@ void SimpleParser::Parse()
 				auto& method = result_.namespaces[cur_namespace_index].classes[cur_class_index].methods.emplace_back();
 				want_method_ret_type = true;
 				want_autogen = false;
+				continue;
+			}
+
+			if (want_autogen_new)
+			{
+				if (cur_class_index == (uint16_t)-1)
+					throw std::runtime_error("Invalid __autogen_new. Outside of class");
+
+				cur_method_index = (uint16_t)result_.namespaces[cur_namespace_index].classes[cur_class_index].methods.size();
+				auto& method = result_.namespaces[cur_namespace_index].classes[cur_class_index].methods.emplace_back();
+				method.is_new = true;
+				want_method_ret_type = true;
+				want_autogen_new = false;
 				continue;
 			}
 

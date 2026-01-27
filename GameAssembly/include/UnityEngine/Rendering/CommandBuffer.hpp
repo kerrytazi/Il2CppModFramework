@@ -13,7 +13,7 @@ public:
 	__autogen System::Void Clear();
 
 	[[nodiscard]]
-	static CommandBuffer* New();
+	__autogen_new static UnityEngine::Rendering::CommandBuffer* New();
 
 private:
 
