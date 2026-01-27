@@ -11,7 +11,7 @@ class SimpleParser
 {
 public:
 
-	SimpleParser(const char* ptr, size_t size);
+	SimpleParser(uint64_t unity_version_num, const char* ptr, size_t size);
 
 	void Parse();
 
@@ -63,7 +63,9 @@ private:
 	const char* begin_ = nullptr;
 	const char* ptr_ = nullptr;
 	const char* end_ = nullptr;
+	uint64_t unity_version_num_ = 0;
+
 	ParsedResult result_;
 };
 
-std::optional<ParsedResult> SimpleParse(const char* ptr, size_t size);
+std::optional<ParsedResult> SimpleParse(uint64_t unity_version_num, const char* ptr, size_t size);

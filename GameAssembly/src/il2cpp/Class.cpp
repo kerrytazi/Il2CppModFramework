@@ -205,6 +205,22 @@ const il2cpp::Field* il2cpp::Class::FindStaticThreadLocalFieldRecursive(std::str
 	return nullptr;
 }
 
+const il2cpp::Method* il2cpp::Class::FindMethod(std::string_view method_name, int param_count) const
+{
+	for (auto method : GetMethods())
+	{
+		if (method->GetParametersCount() != param_count)
+			continue;
+
+		if (method->GetName() != method_name)
+			continue;
+
+		return method;
+	}
+
+	return nullptr;
+}
+
 const il2cpp::Class* il2cpp::Class::Find(std::string_view namespaze, std::string_view class_name)
 {
 	assert(g_il2cpp_data.GameAssembly);

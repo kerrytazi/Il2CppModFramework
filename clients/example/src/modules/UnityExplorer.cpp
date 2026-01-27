@@ -672,7 +672,11 @@ private:
 
 					ImGui::EndTable();
 
+#if UC_UNITY_VERSION_NUM >= 2022308945
 					for (auto comp : obj->GetComponentsView())
+#else
+					for (auto comp : *obj->GetComponents())
+#endif // UC_UNITY_VERSION_NUM >= 2022308945
 					{
 						if (ImGui::Button(comp->GetClass()->GetName().data()))
 						{

@@ -11,6 +11,7 @@ namespace il2cpp
 class Class;
 class Type;
 class Field;
+class Method;
 
 void* resolve_icall(const char* name);
 System::Object* object_new(const il2cpp::Class* klass);
@@ -18,6 +19,7 @@ System::Object* array_new(const il2cpp::Class* element_klass, uintptr_t length);
 System::String* string_new(const char* str, int32_t len);
 System::String* string_new_utf16(const char16_t* str, int32_t len);
 System::Object* type_get_object(const Type* type);
+System::Object* method_get_object(const Method* method);
 const il2cpp::Class* class_from_type(const Type* type);
 
 const void field_static_get_value(const Field* field, void* out);

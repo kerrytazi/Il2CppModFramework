@@ -34,7 +34,7 @@ function(add_autogen project_target)
 
 		add_custom_command(
 			OUTPUT ${cpp_file}
-			COMMAND autogen ${header} ${cpp_file}
+			COMMAND autogen ${UC_UNITY_VERSION_NUM} "${header}" "${cpp_file}"
 			DEPENDS autogen ${header}
 			COMMENT "autogen ${cpp_file} from ${header}"
 			VERBATIM

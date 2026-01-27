@@ -132,6 +132,12 @@ System::Object* il2cpp::type_get_object(const Type* type)
 	return g_il2cpp_data.il2cpp_type_get_object(type);
 }
 
+System::Object* il2cpp::method_get_object(const Method* method)
+{
+	assert(g_il2cpp_data.il2cpp_method_get_object);
+	return g_il2cpp_data.il2cpp_method_get_object(method);
+}
+
 const il2cpp::Class* il2cpp::class_from_type(const Type* type)
 {
 	assert(g_il2cpp_data.il2cpp_class_from_type);

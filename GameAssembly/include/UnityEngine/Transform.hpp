@@ -33,9 +33,11 @@ public:
 	__autogen System::Void set_localPosition(UnityEngine::Vector3 val);
 	__autogen System::Void set_eulerAngles(UnityEngine::Vector3 val);
 	__autogen System::Void set_localEulerAngles(UnityEngine::Vector3 val);
+#if UC_UNITY_VERSION_NUM >= 2022308945
 	__autogen System::Void set_right(UnityEngine::Vector3 val);
 	__autogen System::Void set_up(UnityEngine::Vector3 val);
 	__autogen System::Void set_forward(UnityEngine::Vector3 val);
+#endif // UC_UNITY_VERSION_NUM >= 2022308945
 	__autogen System::Void set_rotation(UnityEngine::Quaternion val);
 	__autogen System::Void set_localRotation(UnityEngine::Quaternion val);
 	__autogen System::Void set_localScale(UnityEngine::Vector3 val);

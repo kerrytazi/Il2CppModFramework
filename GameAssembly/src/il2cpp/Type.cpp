@@ -55,7 +55,7 @@ int il2cpp::Type::SizeOfType() const
 	return -1;
 }
 
-System::Type* il2cpp::Type::ToSystemType() const
+System::Type* il2cpp::Type::ToReflectionType() const
 {
 	return static_cast<System::Type*>(il2cpp::type_get_object(this));
 }

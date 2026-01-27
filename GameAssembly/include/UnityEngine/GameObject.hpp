@@ -1,7 +1,10 @@
 #pragma once
 
 #include "System/primitives.hpp"
+#include "System/Reflection/MethodInfo.hpp"
 #include "UnityEngine/Object.hpp"
+#include "common/CallCached.hpp"
+#include "il2cpp/Array.hpp"
 
 #include <ranges>
 
@@ -18,8 +21,10 @@ class __autogen GameObject : public UnityEngine::Object
 {
 public:
 
+#if UC_UNITY_VERSION_NUM >= 2022308945
 	__autogen System::Int32 GetComponentCount();
 	__autogen UnityEngine::Component* GetComponentAtIndex(System::Int32 index);
+#endif // UC_UNITY_VERSION_NUM >= 2022308945
 
 	__autogen System::Void SetActive(System::Boolean value);
 	__autogen System::Boolean get_activeSelf();
@@ -33,6 +38,23 @@ public:
 
 	__autogen static UnityEngine::GameObject* Find(System::String* name);
 
+	// TODO: Benchmark against GetComponentsView
+	il2cpp::Array<UnityEngine::Component*>* GetComponents()
+	{
+		auto gmethod = CallCached<decltype([]() {
+			auto klass = il2cpp::Find<GameObject>();
+			auto type_args = il2cpp::Array<System::Type*>::New({ il2cpp::Find<System::Object>()->GetType()->ToReflectionType() });
+			auto method = klass->FindMethod("GetComponents", 0);
+			assert(method);
+			auto gmethod = method->ToReflectionMethod()->MakeGenericMethod(type_args)->ToIl2CppMethod();
+			return gmethod;
+		})>();
+		auto method_ptr = gmethod->GetMethodPointer<il2cpp::Array<UnityEngine::Component*>*(GameObject*)>();
+		assert(method_ptr);
+		return method_ptr(this);
+	}
+
+#if UC_UNITY_VERSION_NUM >= 2022308945
 	template <typename T = void>
 	auto GetComponentsView()
 	{
@@ -44,6 +66,7 @@ public:
 			std::views::iota(System::Int32(0), GetComponentCount()) |
 			std::views::transform(get_component);
 	}
+#endif // UC_UNITY_VERSION_NUM >= 2022308945
 };
 
 } // namespace UnityEngine

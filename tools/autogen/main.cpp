@@ -25,21 +25,23 @@ int main(int argc, const char** argv)
 {
 #if 1
 	// Check command line arguments
-	if (argc != 3)
+	if (argc != 4)
 	{
-		std::cerr << "Usage: " << argv[0] << " <input_file> <output_file>\n";
+		std::cerr << "Usage: " << argv[0] << " <unity_version_num> <input_file> <output_file>\n";
 		return 1;
 	}
 
-	std::string input_path = argv[1];
-	std::string output_path = argv[2];
+	uint64_t unity_version_num = std::stoull(argv[1]);
+	std::string input_path = argv[2];
+	std::string output_path = argv[3];
 #else
+	uint64_t unity_version_num = 2022308945;
 	std::string input_path = "../../../../GameAssembly/include/System/Threading/ThreadPool.hpp";
 	std::string output_path = "test.out";
 #endif // 0
 
 	auto input_conetent = ReadWholeFile(input_path);
-	auto result = SimpleParse(input_conetent.data(), input_conetent.size());
+	auto result = SimpleParse(unity_version_num, input_conetent.data(), input_conetent.size());
 
 	if (!result.has_value())
 		return 1;

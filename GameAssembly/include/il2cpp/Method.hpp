@@ -8,6 +8,8 @@
 #include <ranges>
 #include <optional>
 
+namespace System::Reflection { class MethodInfo; }
+
 namespace il2cpp
 {
 
@@ -47,6 +49,8 @@ public:
 
 	template <typename TFunc>
 	auto GetMethodPointer() const { return reinterpret_cast<typename templates::func<TFunc>::pointer>(_GetMethodPointer()); }
+
+	System::Reflection::MethodInfo* ToReflectionMethod() const;
 
 private:
 

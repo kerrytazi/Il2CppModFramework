@@ -114,10 +114,10 @@ struct il2cpp::FindClassOnce<System::Func<TArgsAndRet...>>
 			auto type_args = il2cpp::Array<System::Type*>::New(_Helper::count);
 
 			[&]<size_t... I>(std::index_sequence<I...>) {
-				((type_args->at(I) = il2cpp::Find<std::remove_pointer_t<typename std::tuple_element<I, std::tuple<TArgsAndRet...>>::type>>()->GetType()->ToSystemType()), ...);
+				((type_args->at(I) = il2cpp::Find<std::remove_pointer_t<typename std::tuple_element<I, std::tuple<TArgsAndRet...>>::type>>()->GetType()->ToReflectionType()), ...);
 			}(std::make_index_sequence<_Helper::count>());
 
-			auto gklass = klass->GetType()->ToSystemType()->MakeGenericType(type_args)->ToIl2CppType()->ToClass();
+			auto gklass = klass->GetType()->ToReflectionType()->MakeGenericType(type_args)->ToIl2CppType()->ToClass();
 			gklass->_ForceInitFull();
 			return gklass;
 		})>();

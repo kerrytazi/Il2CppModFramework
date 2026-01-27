@@ -65,7 +65,7 @@ struct il2cpp::FindClassOnce<System::Action<TArgs...>>
 					((type_args->at(I) = il2cpp::Find<std::remove_pointer_t<typename std::tuple_element<I, std::tuple<TArgs...>>::type>>()->GetType()->ToSystemType()), ...);
 				}(std::make_index_sequence<sizeof...(TArgs)>());
 
-				auto gklass = klass->GetType()->ToSystemType()->MakeGenericType(type_args)->ToIl2CppType()->ToClass();
+				auto gklass = klass->GetType()->ToReflectionType()->MakeGenericType(type_args)->ToIl2CppType()->ToClass();
 				gklass->_ForceInitFull();
 				return gklass;
 			}

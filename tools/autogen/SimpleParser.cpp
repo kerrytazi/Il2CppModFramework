@@ -41,10 +41,11 @@ constexpr static std::array<bool, 256> VALID_NAMESPACE_TABLE = []() {
 	return result;
 }();
 
-SimpleParser::SimpleParser(const char* ptr, size_t size)
+SimpleParser::SimpleParser(uint64_t unity_version_num, const char* ptr, size_t size)
 	: begin_{ ptr }
 	, ptr_{ ptr }
 	, end_{ ptr + size }
+	, unity_version_num_{ unity_version_num }
 {
 }
 
@@ -62,6 +63,7 @@ void SimpleParser::Parse()
 	bool want_method_arguments = false;
 	bool want_method_argument_end = false;
 	bool want_class_decl_end = false;
+	bool skip_unity_version_check = false;
 	uint16_t cur_namespace_index = (uint16_t)-1;
 	uint16_t cur_class_index = (uint16_t)-1;
 	uint16_t prev_namespace_index = (uint16_t)-1;
@@ -81,6 +83,44 @@ void SimpleParser::Parse()
 		if (SkipWhitespaces(want_whitespaces))
 		{
 			want_whitespaces = false;
+			continue;
+		}
+
+		if (skip_unity_version_check)
+		{
+			if (TryReadToken("#endif"))
+			{
+				skip_unity_version_check = false;
+				continue;
+			}
+
+			++ptr_;
+			continue;
+		}
+
+		if (TryReadToken("#if UC_UNITY_VERSION_NUM "))
+		{
+			bool lt = false;
+			bool gt = false;
+
+			if (TryReadToken("<= "))
+				lt = true;
+
+			if (TryReadToken(">= "))
+				gt = true;
+
+			if (!lt && !gt)
+				throw std::runtime_error("Invalid #if UC_UNITY_VERSION_NUM");
+
+			auto version_str = TryReadName();
+			auto version = std::stoull(std::string(version_str));
+
+			if (lt && !(unity_version_num_ <= version))
+				skip_unity_version_check = true;
+
+			if (gt && !(unity_version_num_ >= version))
+				skip_unity_version_check = true;
+
 			continue;
 		}
 
@@ -546,11 +586,11 @@ bool SimpleParser::IsLastBracket(char bracket_open) const
 	return brackets_.back().open == bracket_open;
 }
 
-std::optional<ParsedResult> SimpleParse(const char* ptr, size_t size)
+std::optional<ParsedResult> SimpleParse(uint64_t unity_version_num, const char* ptr, size_t size)
 {
 	try
 	{
-		SimpleParser parser(ptr, size);
+		SimpleParser parser(unity_version_num, ptr, size);
 		parser.Parse();
 		return std::move(parser).Result();
 	}

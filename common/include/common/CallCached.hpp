@@ -12,24 +12,42 @@ public:
 
 	value_type& Deref()
 	{
-		CheckInit();
+		TryInit();
 		return *value_;
 	}
 
-private:
-
-	void CheckInit()
+	void TryInit()
 	{
 		if (!value_.has_value()) [[unlikely]]
 			value_ = TFunc{}();
 	}
 
+private:
+
 	std::optional<value_type> value_;
 };
+
+void __RegisterCallCached(void(*init)());
+
+template <typename TFunc>
+struct __RegisterCallCachedStruct
+{
+	inline static bool initialized = []() {
+		__RegisterCallCached([]() {
+			CallCachedStorage<TFunc> storage;
+			storage.TryInit();
+		});
+
+		return true;
+	}();
+};
+
+void _CallCachedEverything();
 
 template <typename TFunc>
 auto CallCached()
 {
+	(void)__RegisterCallCachedStruct<TFunc>{};
 	CallCachedStorage<TFunc> storage;
 	return storage.Deref();
 }

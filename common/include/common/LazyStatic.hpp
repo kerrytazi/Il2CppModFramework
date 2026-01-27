@@ -2,6 +2,8 @@
 
 #include <optional>
 
+// Constructs object on first access.
+// Useful when you can't control order of statics initialization.
 template <typename T>
 class LazyStatic
 {

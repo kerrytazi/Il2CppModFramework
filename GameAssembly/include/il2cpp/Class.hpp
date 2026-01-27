@@ -40,11 +40,6 @@ public:
 	const Class* GetBase() const;
 	const bool IsBaseOf(const Class* _derived) const;
 
-	const Method* FindMethod(std::string_view method_name) const
-	{
-		return _FindMethod(method_name);
-	}
-
 	// Non-static only
 	const Field* FindField(std::string_view field_name) const;
 	const Field* FindFieldRecursive(std::string_view field_name) const;
@@ -60,6 +55,13 @@ public:
 	// Static thread local only
 	const Field* FindStaticThreadLocalField(std::string_view field_name) const;
 	const Field* FindStaticThreadLocalFieldRecursive(std::string_view field_name) const;
+
+	const Method* FindMethod(std::string_view method_name) const
+	{
+		return _FindMethod(method_name);
+	}
+
+	const Method* FindMethod(std::string_view method_name, int param_count) const;
 
 	const Method* FindMethod(
 		std::string_view method_name,

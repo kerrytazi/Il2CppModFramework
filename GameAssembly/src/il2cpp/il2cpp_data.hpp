@@ -53,6 +53,7 @@ struct MyIl2CppData
 	System::String* (*il2cpp_string_new)(const char* str, int32_t len);
 	System::String* (*il2cpp_string_new_utf16)(const char16_t* str, int32_t len);
 	System::Object* (*il2cpp_type_get_object)(const il2cpp::Type *type);
+	System::Object* (*il2cpp_method_get_object)(const il2cpp::Method *type);
 	il2cpp::Class* (*il2cpp_class_from_type)(const il2cpp::Type* type);
 
 	void (*il2cpp_field_static_get_value)(const il2cpp::Field* field, void* out);
