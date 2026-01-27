@@ -12,7 +12,7 @@ System::Threading::WaitCallback* System::Threading::WaitCallback::New(void(*func
 	method->parameters_count = 0;
 	method->flags = 0x0010; // METHOD_ATTRIBUTE_STATIC
 	auto obj = (WaitCallback*)il2cpp::object_new(il2cpp::Find<WaitCallback>());
-	obj->_ctor(nullptr, std::bit_cast<System::IntPtr>(&method));
+	obj->_ctor(nullptr, System::IntPtr{ (intptr_t)&method });
 	__RegisterTmpMethodInfo(obj, method);
 	return obj;
 }

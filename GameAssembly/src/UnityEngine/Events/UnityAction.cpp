@@ -12,7 +12,7 @@ UnityEngine::Events::UnityAction* UnityEngine::Events::UnityAction::New(void(*fu
 	method->parameters_count = 0;
 	method->flags = 0x0010; // METHOD_ATTRIBUTE_STATIC
 	auto obj = (UnityEngine::Events::UnityAction*)il2cpp::object_new(il2cpp::Find<UnityEngine::Events::UnityAction>());
-	obj->_ctor(nullptr, std::bit_cast<System::IntPtr>(&method));
+	obj->_ctor(nullptr, System::IntPtr{ (intptr_t)&method });
 	__RegisterTmpMethodInfo(obj, method);
 	return obj;
 }

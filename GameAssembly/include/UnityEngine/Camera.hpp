@@ -25,6 +25,8 @@ enum class StereoTargetEyeMask;
 
 namespace SceneManagement { struct Scene; }
 namespace Rendering { enum class OpaqueSortMode; }
+namespace Rendering { enum class CameraEvent; }
+namespace Rendering { class CommandBuffer; }
 
 class __autogen Camera : public UnityEngine::Behaviour
 {
@@ -156,6 +158,9 @@ public:
 	__autogen System::Void set_stereoSeparation(System::Single val);
 	__autogen System::Void set_stereoConvergence(System::Single val);
 	__autogen System::Void set_stereoTargetEye(UnityEngine::StereoTargetEyeMask val);
+
+	__autogen System::Void AddCommandBuffer(UnityEngine::Rendering::CameraEvent evt, UnityEngine::Rendering::CommandBuffer* buffer);
+	__autogen System::Void RemoveCommandBuffer(UnityEngine::Rendering::CameraEvent evt, UnityEngine::Rendering::CommandBuffer* buffer);
 
 	enum class GateFitMode
 	{

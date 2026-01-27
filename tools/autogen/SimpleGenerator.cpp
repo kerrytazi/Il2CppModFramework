@@ -235,12 +235,12 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 					else
 						ss << "\t\tauto method = klass->FindMethod(";
 					ss << "\"" << NormalizeMethodName(m.name) << "\", ";
-					ss << "\"" << NormalizeType(ReplaceAll(m.ret_type, ignore_class, "")) << "\", ";
+					ss << "\"" << NormalizeType(m.ret_type) << "\", ";
 
 					ss << "{ ";
 					for (size_t i = 0; i < m.parameters.size(); ++i)
 					{
-						ss << "\"" << NormalizeType(ReplaceAll(m.parameters[i], ignore_class, "")) << "\"";
+						ss << "\"" << NormalizeType(m.parameters[i]) << "\"";
 
 						if (i < m.parameters.size() - 1)
 							ss << ",";
