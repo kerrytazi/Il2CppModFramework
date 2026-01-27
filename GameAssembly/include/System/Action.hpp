@@ -14,7 +14,10 @@
 #include <tuple>
 #include <utility>
 
+void __RegisterTmpMethodInfo(System::Object* obj, void* method);
+[[nodiscard]]
 void* __CreateMethodInfoForAction(const void* func, size_t parameters_count);
+[[nodiscard]]
 const il2cpp::Class* __FindActionClass(size_t templates_count);
 
 namespace System
@@ -37,11 +40,13 @@ public:
 		func(this, object, method);
 	}
 
+	[[nodiscard]]
 	static Action<TArgs...>* New(void(*func)(TArgs...))
 	{
 		auto method = __CreateMethodInfoForAction(func, sizeof...(TArgs));
 		auto obj = (Action<TArgs...>*)il2cpp::object_new(il2cpp::Find<Action<TArgs...>>());
 		obj->_ctor(nullptr, System::IntPtr{ (intptr_t)method });
+		__RegisterTmpMethodInfo(method);
 		return obj;
 	}
 };

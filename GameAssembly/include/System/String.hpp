@@ -12,16 +12,20 @@ class __autogen String : public System::Object
 {
 public:
 
+	[[nodiscard]]
 	static String* New(const std::string_view& str);
+	[[nodiscard]]
 	static String* New(const std::u16string_view& str);
 
 	template <size_t N>
+	[[nodiscard]]
 	static String* New(const char (&str)[N])
 	{
 		return New(std::string_view(str, N - 1));
 	}
 
 	template <size_t N>
+	[[nodiscard]]
 	static String* New(const char16_t (&str)[N])
 	{
 		return New(std::u16string_view(str, N - 1));
@@ -45,11 +49,13 @@ private:
 
 } // namespace System
 
+[[nodiscard]]
 inline System::String* operator""_il2(const char* str, size_t size)
 {
 	return System::String::New({ str, size });
 }
 
+[[nodiscard]]
 inline System::String* operator""_il2(const char16_t* str, size_t size)
 {
 	return System::String::New({ str, size });

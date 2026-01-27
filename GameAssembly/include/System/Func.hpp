@@ -65,7 +65,10 @@ public:
 	static constexpr size_t count = sizeof...(Args);
 };
 
+void __RegisterTmpMethodInfo(System::Object* obj, void* method);
+[[nodiscard]]
 void* __CreateMethodInfoForFunc(const void* func, size_t parameters_count);
+[[nodiscard]]
 const il2cpp::Class* __FindFuncClass(size_t templates_count);
 
 namespace System
@@ -90,11 +93,13 @@ public:
 		func(this, object, method);
 	}
 
+	[[nodiscard]]
 	static Func<TArgsAndRet...>* New(_Helper::function_pointer_type func)
 	{
 		auto method = __CreateMethodInfoForFunc(func, _Helper::count - 1);
 		auto obj = (Func<TArgsAndRet...>*)il2cpp::object_new(il2cpp::Find<Func<TArgsAndRet...>>());
 		obj->_ctor(nullptr, System::IntPtr{ (intptr_t)method });
+		__RegisterTmpMethodInfo(obj, method);
 		return obj;
 	}
 };

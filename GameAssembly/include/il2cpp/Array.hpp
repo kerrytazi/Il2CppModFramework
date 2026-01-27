@@ -8,6 +8,7 @@
 namespace il2cpp
 {
 
+[[nodiscard]]
 System::Object* _ArrayNew(const il2cpp::Class* element_class, size_t size);
 
 template <typename T>
@@ -15,11 +16,13 @@ class Array : System::Object
 {
 public:
 
+	[[nodiscard]]
 	static Array<T>* New(size_t size)
 	{
 		return (Array<T>*)_ArrayNew(Find<std::remove_pointer_t<T>>(), size);
 	}
 
+	[[nodiscard]]
 	static Array<T>* New(std::initializer_list<T> values)
 	{
 		auto arr = New(values.size());

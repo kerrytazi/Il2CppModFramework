@@ -11,6 +11,7 @@ public:
 
 	__autogen System::Void _ctor(System::Object* object, System::IntPtr method);
 
+	[[nodiscard]]
 	static UnityAction* New(void(*func)());
 };
 
