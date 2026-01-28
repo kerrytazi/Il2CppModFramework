@@ -17,6 +17,7 @@
 #include "il2cpp/Class.hpp"
 #include "il2cpp/Method.hpp"
 #include "il2cpp/gc_ref.hpp"
+#include "System/Collections/Generic/Dictionary.hpp"
 
 #include "common/ExceptionGuarded.hpp"
 
@@ -32,6 +33,14 @@ public:
 	}
 
 private:
+
+	void TestDict()
+	{
+		System::Collections::Generic::Dictionary<System::Int32, System::Object*>* dict = il2cpp::Class::Find("System.Text", "Encoding")->DynamicStaticField<System::Collections::Generic::Dictionary<System::Int32, System::Object*>*>("encodings");
+
+		for (const auto& kv : *dict)
+			Log::Debug("dict[", kv.key, "] = ", kv.value->GetClass()->GetName());
+	}
 
 	void TestDynamicField()
 	{

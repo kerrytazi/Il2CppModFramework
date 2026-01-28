@@ -12,7 +12,7 @@ namespace il2cpp
 System::Object* _ArrayNew(const il2cpp::Class* element_class, size_t size);
 
 template <typename T>
-class Array : System::Object
+class Array : public System::Object
 {
 public:
 
@@ -35,8 +35,8 @@ public:
 
 	size_t Length() const { return bounds ? bounds->length : max_length; }
 
-	const void* Data() const { return &first_val; }
-	void* Data() { return &first_val; }
+	const T* Data() const { return (const T*)&first_val; }
+	T* Data() { return (T*)&first_val; }
 
 	T& at(size_t index)
 	{
@@ -53,15 +53,15 @@ public:
 	T& operator[](size_t index) { return at(index); }
 	const T& operator[](size_t index) const { return at(index); }
 
-	T* begin() { return (T*)Data(); }
-	T* end() { return ((T*)Data()) + Length(); }
+	T* begin() { return Data(); }
+	T* end() { return Data() + Length(); }
 
-	const T* begin() const { return (const T*)Data(); }
-	const T* end() const { return ((const T*)Data()) + Length(); }
-	const T* cbegin() const { return (const T*)Data(); }
-	const T* cend() const { return ((const T*)Data()) + Length(); }
+	const T* begin() const { return Data(); }
+	const T* end() const { return Data() + Length(); }
+	const T* cbegin() const { return Data(); }
+	const T* cend() const { return Data() + Length(); }
 
-protected:
+private:
 
 	using il2cpp_array_size_t = uintptr_t;
 	using il2cpp_array_lower_bound_t = int32_t;
@@ -79,4 +79,4 @@ protected:
 	uint8_t first_val;
 };
 
-} // namespace System
+} // namespace il2cpp
