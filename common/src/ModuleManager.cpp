@@ -345,9 +345,9 @@ void ModuleManager::OnPostUpdate()
 
 		_Il2CppDisableUpdate();
 
-#if defined(UC_DLL_INJECTOR)
+#if defined(UC_LOADER_DLL_INJECTOR)
 		_StartUnloadLibrary();
-#elif defined(UC_MANUAL_MAPPER)
+#elif defined(UC_LOADER_MANUAL_MAPPER)
 		_BootstrapCleanup();
 #else
 #error Unknown Loader

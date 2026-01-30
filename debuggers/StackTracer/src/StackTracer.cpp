@@ -8,9 +8,10 @@
 
 #include <sstream>
 #include <optional>
-#include <dbghelp.h>
 #include <mutex>
 
+#if defined(UC_STACK_TRACER_DBGHELP)
+#include <dbghelp.h>
 #pragma comment(lib, "dbghelp.lib")
 
 struct Initializer
@@ -57,6 +58,14 @@ struct Initializer
 static Initializer g_symbols_initializer;
 static std::mutex g_mtx;
 
+#elif defined(UC_STACK_TRACER_DIA)
+#include <dia2.h>
+#pragma comment(lib, "diaguids.lib")
+#elif !defined(UC_STACK_TRACER_NONE)
+#error UC_STACK_TRACER Implementation not defined
+#endif
+
+#if !defined(UC_STACK_TRACER_NONE)
 struct StackFrame
 {
 	DWORD64 address;
@@ -123,16 +132,14 @@ static std::vector<StackFrame> WalkStack(HANDLE process, HANDLE thread, const CO
 		StackFrame frame{};
 		frame.address = stack_frame.AddrPC.Offset;
 
-		// Try to get symbol name
-		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
-		PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
-		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-		symbol->MaxNameLen = MAX_SYM_NAME;
+		SYMBOL_INFO_PACKAGE package;
+		package.si.SizeOfStruct = sizeof(package.si);
+		package.si.MaxNameLen = MAX_SYM_NAME;
 
 		DWORD64 displacement = 0;
-		if (SymFromAddr(process, stack_frame.AddrPC.Offset, &displacement, symbol))
+		if (SymFromAddr(process, stack_frame.AddrPC.Offset, &displacement, &package.si))
 		{
-			frame.name = symbol->Name;
+			frame.name = std::string(package.si.Name, package.si.NameLen);
 		}
 		else
 		{
@@ -207,31 +214,35 @@ static std::string FormatFrames(const std::vector<StackFrame>& frames)
 
 	return std::move(ss).str();
 }
+#endif // !defined(UC_STACK_TRACER_NONE)
 
 std::string StackTracer::GetStackTrace()
 {
+#if defined(UC_STACK_TRACER_NONE)
+	return "<disabled>";
+#else
 	std::unique_lock lock(g_mtx);
 
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
 
-	if (g_symbols_initializer.InitSymbols(process))
-	{
-		CONTEXT context{};
-		context.ContextFlags = CONTEXT_FULL;
-		RtlCaptureContext(&context);
-
-		auto frames = WalkStack(process, thread, &context);
-		return FormatFrames(frames);
-	}
-	else
-	{
+	if (!g_symbols_initializer.InitSymbols(process))
 		return "StackTracer::GetStackTrace() failed. Can't InitSymbols";
-	}
+
+	CONTEXT context{};
+	context.ContextFlags = CONTEXT_FULL;
+	RtlCaptureContext(&context);
+
+	auto frames = WalkStack(process, thread, &context);
+	return FormatFrames(frames);
+#endif // defined(UC_STACK_TRACER_NONE)
 }
 
 std::string StackTracer::GetStackTrace(_EXCEPTION_POINTERS* pointers)
 {
+#if defined(UC_STACK_TRACER_NONE)
+	return "<disabled>";
+#else
 	std::unique_lock lock(g_mtx);
 
 	if (!pointers)
@@ -244,42 +255,38 @@ std::string StackTracer::GetStackTrace(_EXCEPTION_POINTERS* pointers)
 	HANDLE thread = GetCurrentThread();
 
 	if (g_symbols_initializer.InitSymbols(process))
-	{
-		auto frames = WalkStack(process, thread, pointers->ContextRecord);
-		return FormatFrames(frames);
-	}
-	else
-	{
 		return "StackTracer::GetStackTrace(pointers) failed. Can't InitSymbols";
-	}
+
+	auto frames = WalkStack(process, thread, pointers->ContextRecord);
+	return FormatFrames(frames);
+#endif // defined(UC_STACK_TRACER_NONE)
 }
 
 void StackTracer::LogStackTrace()
 {
-	std::unique_lock lock(g_mtx);
-
+#if !defined(UC_STACK_TRACER_NONE)
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
 
-	if (g_symbols_initializer.InitSymbols(process))
-	{
-		CONTEXT context{};
-		context.ContextFlags = CONTEXT_FULL;
-		RtlCaptureContext(&context);
+	std::unique_lock lock(g_mtx);
 
-		auto frames = WalkStack(process, thread, &context);
-		LogFrames(frames);
-	}
-	else
-	{
+	if (g_symbols_initializer.InitSymbols(process))
 		Log::Error(cs::Red("StackTracer::LogStackTrace() failed. Can't InitSymbols"));
-	}
+
+	CONTEXT context{};
+	context.ContextFlags = CONTEXT_FULL;
+	RtlCaptureContext(&context);
+
+	auto frames = WalkStack(process, thread, &context);
+	LogFrames(frames);
+#endif // !defined(UC_STACK_TRACER_NONE)
 }
 
 int StackTracer::LogStackTrace(_EXCEPTION_POINTERS* pointers)
 {
-	std::unique_lock lock(g_mtx);
-
+#if defined(UC_STACK_TRACER_NONE)
+	return 0;
+#else
 	if (!pointers)
 	{
 		Log::Error(cs::Red("StackTracer::LogStackTrace(pointers) failed. pointers == null"));
@@ -295,24 +302,24 @@ int StackTracer::LogStackTrace(_EXCEPTION_POINTERS* pointers)
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
 
-	if (g_symbols_initializer.InitSymbols(process))
-	{
-		CONTEXT context = *pointers->ContextRecord;
-		auto frames = WalkStack(process, thread, &context);
+	std::unique_lock lock(g_mtx);
 
-		if (frames.empty())
-		{
-			Log::Error(cs::Red("StackTracer::LogStackTrace(pointers) failed. Zero frames found"));
-			return 0;
-		}
-
-		LogFrames(frames);
-		return (int)frames.size();
-	}
-	else
+	if (!g_symbols_initializer.InitSymbols(process))
 	{
 		Log::Error(cs::Red("StackTracer::LogStackTrace(pointers) failed. Can't InitSymbols"));
+		return 0;
 	}
 
-	return 0;
+	CONTEXT context = *pointers->ContextRecord;
+	auto frames = WalkStack(process, thread, &context);
+
+	if (frames.empty())
+	{
+		Log::Error(cs::Red("StackTracer::LogStackTrace(pointers) failed. Zero frames found"));
+		return 0;
+	}
+
+	LogFrames(frames);
+	return (int)frames.size();
+#endif // defined(UC_STACK_TRACER_NONE)
 }

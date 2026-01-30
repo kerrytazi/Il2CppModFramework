@@ -112,7 +112,4 @@ You can pass additional options to cmake during configuration.
 |-|-|-|
 |`UC_ENABLE_IMGUI`|Enable ImGui|`[ON]/OFF`|
 |`UC_LOADER`|Loader type|`[DLL_INJECTOR]/MANUAL_MAPPER`|
-
-
-
-
+|`UC_STACK_TRACER`|Stack Tracer implementation|`[DBGHELP]/DIA/NONE`|
