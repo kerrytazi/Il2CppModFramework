@@ -60,6 +60,8 @@ private:
 	void LoadConfig();
 	void SaveConfig();
 
+	bool save_on_unload_ = false;
+
 #ifdef ICMF_ENABLE_IMGUI
 	std::atomic<bool> request_use_imgui_ = false;
 	std::atomic<bool> use_imgui_ = false;

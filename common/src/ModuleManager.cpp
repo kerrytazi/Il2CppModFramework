@@ -165,6 +165,8 @@ void ModuleManager::LoadConfig()
 
 	for (const auto& module : modules_)
 		module->LoadConfig(doc);
+
+	save_on_unload_ = true;
 }
 
 void ModuleManager::SaveConfig()
@@ -341,7 +343,10 @@ void ModuleManager::OnPostUpdate()
 	if (ELoadState check = ELoadState::DoUnload; load_state_.compare_exchange_strong(check, ELoadState::Unloaded))
 	{
 		Unload();
-		SaveConfig();
+
+		// Don't override config if it was not loaded properly
+		if (save_on_unload_)
+			SaveConfig();
 
 		_Il2CppDisableUpdate();
 
