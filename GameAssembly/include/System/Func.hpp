@@ -83,12 +83,12 @@ public:
 
 	System::Void _ctor(System::Object* object, System::IntPtr method)
 	{
-		auto func = CallCached<decltype([]() {
+		auto func = CallCached([]() {
 			auto klass = il2cpp::Find<Func<TArgsAndRet...>>(); assert(klass);
 			auto method = klass->FindMethod(".ctor", "System.Void", { "System.Object", "System.IntPtr" }, false); assert(method);
 			auto method_ptr = method->template GetMethodPointer<System::Void(decltype(this), System::Object*, System::IntPtr)>(); assert(method_ptr);
 			return method_ptr;
-		}) > ();
+		});
 
 		func(this, object, method);
 	}
@@ -113,7 +113,7 @@ struct il2cpp::FindClassOnce<System::Func<TArgsAndRet...>>
 
 	static const Class* Find()
 	{
-		auto gklass = CallCached<decltype([]() {
+		auto gklass = CallCached([]() {
 			auto klass = __FindFuncClass(_Helper::count);
 			klass->_ForceInitFull();
 			auto type_args = il2cpp::Array<System::Type*>::New(_Helper::count);
@@ -125,7 +125,7 @@ struct il2cpp::FindClassOnce<System::Func<TArgsAndRet...>>
 			auto gklass = klass->GetType()->ToReflectionType()->MakeGenericType(type_args)->ToIl2CppType()->ToClass();
 			gklass->_ForceInitFull();
 			return gklass;
-		})>();
+		});
 		return gklass;
 	}
 };

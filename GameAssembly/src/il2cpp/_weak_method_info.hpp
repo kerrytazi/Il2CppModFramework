@@ -35,7 +35,11 @@ inline il2cpp::TmpMethodInfo* _AllocMethodInfo()
 {
 	auto method = new il2cpp::TmpMethodInfo{};
 	method->name = "";
-	method->klass = (il2cpp::Class*)CallCached<decltype([]() { return il2cpp::Class::Find("", "<>c"); })>();
+	method->klass = (il2cpp::Class*)CallCached([]() {
+		auto method_klass = il2cpp::Class::Find("", "<>c");
+		assert(method_klass);
+		return method_klass;
+	});
 	return method;
 }
 

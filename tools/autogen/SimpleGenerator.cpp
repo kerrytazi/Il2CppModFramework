@@ -128,10 +128,12 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 			ss << "const il2cpp::Class* il2cpp::FindClassOnce<" << ns.name << "::" << cl.name << ">::Find()\n";
 			ss << "{\n";
-			ss << "\tauto klass = CallCached<decltype([]() { ";
-			ss << "return il2cpp::Class::Find(\"" << NormalizeType(ns.name) << "\", \"" << cl.name << "\");";
-			ss << " })>(); assert(klass);\n";
-			ss << "\tklass->_ForceInitFull();\n";
+			ss << "\tauto klass = CallCached([]() {";
+			ss << "\t\tauto klass = il2cpp::Class::Find(\"" << NormalizeType(ns.name) << "\", \"" << cl.name << "\");\n";
+			ss << "\t\tassert(klass);\n";
+			ss << "\t\tklass->_ForceInitFull();\n";
+			ss << "\t\treturn klass;\n";
+			ss << "\t});\n";
 			ss << "\treturn klass;\n";
 			ss << "}\n\n";
 		}
@@ -166,7 +168,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 					else
 						ss << "\tauto func = ";
 
-					ss << "CallCached<decltype([]() {\n";
+					ss << "CallCached([]() {\n";
 				}
 
 				auto add_method_ptr = [&](std::string_view var_name) {
@@ -282,7 +284,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 				if (!m.is_new)
 				{
-					ss << "\t})>();\n";
+					ss << "\t});\n";
 
 					if (m.is_virtual)
 					{

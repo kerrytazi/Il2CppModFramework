@@ -45,7 +45,7 @@ struct __RegisterCallCachedStruct
 void _CallCachedEverything();
 
 template <typename TFunc>
-auto CallCached()
+auto CallCached(TFunc&&)
 {
 	(void)__RegisterCallCachedStruct<TFunc>{};
 	CallCachedStorage<TFunc> storage;

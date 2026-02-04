@@ -9,7 +9,11 @@
 #define FINDER_PRIMITIVE(_Type) \
 const il2cpp::Class* il2cpp::FindClassOnce<System::_Type>::Find() \
 { \
-	auto klass = CallCached<decltype([]() { return il2cpp::Class::Find("System", #_Type); })>(); assert(klass); \
+	auto klass = CallCached([]() { \
+		auto klass = il2cpp::Class::Find("System", #_Type); \
+		assert(klass); \
+		return klass; \
+	}); \
 	klass->_ForceInitFull(); \
 	return klass; \
 }

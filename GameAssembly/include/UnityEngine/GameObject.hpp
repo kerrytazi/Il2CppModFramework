@@ -43,9 +43,9 @@ public:
 	// TODO: Benchmark against GetComponentsView
 	il2cpp::Array<UnityEngine::Component*>* GetComponents()
 	{
-		auto comp_ref_type = CallCached<decltype([]() {
+		auto comp_ref_type = CallCached([]() {
 			return il2cpp::Find<UnityEngine::Component>()->GetType()->ToReflectionType();
-		})>();
+		});
 
 		return GetComponents(comp_ref_type);
 	}
