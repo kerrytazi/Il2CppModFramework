@@ -3,6 +3,7 @@
 #include "System/Object.hpp"
 
 #include <string>
+#include <vector>
 #include <string_view>
 
 namespace System
@@ -40,6 +41,13 @@ public:
 	}
 
 	std::string AsString() const;
+
+	// UNSAFE. Result stored statically and will be invalidated on next call.
+	// null-terminated
+	// No thread safety.
+	// Consider using AsU16StringView or AsString instead.
+	// Unless you absolutely understand what you are doing.
+	std::string_view AsStringView() const;
 
 private:
 

@@ -22,3 +22,19 @@ std::string System::String::AsString() const
 
 	return su::u8(AsU16StringView());
 }
+
+static std::vector<char> g_as_string_cache;
+
+std::string_view System::String::AsStringView() const
+{
+	if ((uintptr_t)this == 0)
+		return "(null)";
+
+	auto u16_str = AsU16StringView();
+	g_as_string_cache.reserve(u16_str.size() * 2 + 1);
+	auto result_size = su::u8(g_as_string_cache.data(), g_as_string_cache.capacity(), u16_str);
+
+	assert(result_size >= u16_str.size());
+	g_as_string_cache.data()[result_size] = '\0';
+	return std::string_view(g_as_string_cache.data(), result_size);
+}

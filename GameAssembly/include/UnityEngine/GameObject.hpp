@@ -34,6 +34,9 @@ public:
 	__autogen System::Int32 get_layer();
 	__autogen System::Void set_layer(System::Int32 value);
 
+	__autogen System::String* get_tag();
+	__autogen System::Void set_tag(System::String* value);
+
 	__autogen UnityEngine::SceneManagement::Scene get_scene();
 
 	__autogen static UnityEngine::GameObject* Find(System::String* name);

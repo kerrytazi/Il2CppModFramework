@@ -3,6 +3,7 @@
 #include "common/NoImplement.hpp"
 #include "common/autogen.hpp"
 
+#include "il2cpp/ClassFinder.hpp"
 #include "il2cpp/Class.hpp"
 
 namespace System
@@ -16,7 +17,21 @@ public:
 
 	__autogen_virtual System::String* ToString();
 
-	const il2cpp::Class* GetClass() { return klass; }
+	const il2cpp::Class* GetClass() const { return klass; }
+
+	Object* TryDownCast(const il2cpp::Class* derived)
+	{
+		if (GetClass()->IsBaseOf(derived))
+			return this;
+
+		return nullptr;
+	}
+
+	template <typename TClass>
+	TClass* TryDownCast()
+	{
+		return static_cast<TClass*>(TryDownCast(il2cpp::Find<TClass>()));
+	}
 
 	// Slow!!!
 	// Consider caching method search via CallCached.

@@ -8,8 +8,6 @@
 
 #include "imgui_internal.h"
 
-extern void ImGui::ShowDemoWindow(bool*);
-
 // If you have troubles setting up imgui/docking
 // Usually you want to disable/remove this module before publishing.
 class ImGuiDumperModule : public Module
