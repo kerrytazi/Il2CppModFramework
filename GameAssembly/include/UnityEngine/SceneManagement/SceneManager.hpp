@@ -2,10 +2,10 @@
 
 #include "System/Object.hpp"
 
-#include "UnityEngine/SceneManagement/Scene.hpp"
-
 namespace UnityEngine::SceneManagement
 {
+
+struct Scene;
 
 class __autogen SceneManager : public System::Object
 {

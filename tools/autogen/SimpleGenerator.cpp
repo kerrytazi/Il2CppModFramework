@@ -128,9 +128,14 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 			ss << "const il2cpp::Class* il2cpp::FindClassOnce<" << ns.name << "::" << cl.name << ">::Find()\n";
 			ss << "{\n";
-			ss << "\tauto klass = CallCached([]() {";
-			ss << "\t\tauto klass = il2cpp::Class::Find(\"" << NormalizeType(ns.name) << "\", \"" << cl.name << "\");\n";
-			ss << "\t\tassert(klass);\n";
+			ss << "\tauto klass = CallCached([]() -> const il2cpp::Class* {\n";
+			ss << "\t\tauto klass = il2cpp::Class::Find(\"" << NormalizeType(ns.name) << "\", \"" << cl.name << "\"); assert(klass);\n";
+			ss << "\t\tif (!klass)\n";
+			ss << "\t\t{\n";
+			ss << "\t\t\tLog::Error(cs::Red(\"autogen Error: Can't find class: " << NormalizeType(ns.name) << "." << cl.name << "\"));\n";
+			ss << "\t\t\tLog::Flush();\n";
+			ss << "\t\t\treturn nullptr;\n";
+			ss << "\t\t}\n";
 			ss << "\t\tklass->_ForceInitFull();\n";
 			ss << "\t\treturn klass;\n";
 			ss << "\t});\n";
@@ -161,6 +166,37 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 				ss << "{\n";
 
+				if (!m.is_virtual)
+				{
+					ss << "\tusing func_t = ";
+					ss << m.ret_type << "(*)(";
+
+					if (!m.is_static)
+					{
+						ss << "decltype(this)";
+
+						if (!m.parameters.empty())
+							ss << ", ";
+					}
+
+					for (size_t i = 0; i < m.parameters.size(); ++i)
+					{
+						ss << m.parameters[i];
+
+						if (i < m.parameters.size() - 1)
+							ss << ", ";
+					}
+
+					ss << ");\n";
+				}
+
+				auto method_var_name = [&]() -> std::string_view {
+					if (m.is_virtual)
+						return "vmethod";
+					else
+						return "method";
+				};
+
 				if (!m.is_new)
 				{
 					if (m.is_virtual)
@@ -168,7 +204,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 					else
 						ss << "\tauto func = ";
 
-					ss << "CallCached([]() {\n";
+					ss << "CallCached([]() -> " << (m.is_virtual ? "const il2cpp::Method*" : "func_t") << " {\n";
 				}
 
 				auto add_method_ptr = [&](std::string_view var_name) {
@@ -216,27 +252,6 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 				else
 				if (m.is_icall)
 				{
-					ss << "\t\tusing func_t = ";
-					ss << m.ret_type << "(*)(";
-
-					if (!m.is_static)
-					{
-						ss << "decltype(this)";
-
-						if (!m.parameters.empty())
-							ss << ", ";
-					}
-
-					for (size_t i = 0; i < m.parameters.size(); ++i)
-					{
-						ss << m.parameters[i];
-
-						if (i < m.parameters.size() - 1)
-							ss << ", ";
-					}
-
-					ss << ");\n";
-
 					ss << "\t\treturn (func_t)il2cpp::resolve_icall(";
 					ss << "\"" << ns.name << "." << cl.name << "::" << m.name << "\"";
 					ss << ");\n";
@@ -244,10 +259,7 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 				else
 				{
 					ss << "\t\tauto klass = il2cpp::Find<" << ns.name << "::" << cl.name << ">(); assert(klass);\n";
-					if (m.is_virtual)
-						ss << "\t\tauto vmethod = klass->FindMethod(";
-					else
-						ss << "\t\tauto method = klass->FindMethod(";
+					ss << "\t\tauto " << method_var_name() << " = klass->FindMethod(";
 					ss << "\"" << NormalizeMethodName(m.name) << "\", ";
 					ss << "\"" << NormalizeType(m.ret_type) << "\", ";
 
@@ -265,10 +277,14 @@ std::string SimpleGenerate(const ParsedResult& parsed)
 
 					ss << "" << (m.is_static ? "true" : "false");
 
-					if (m.is_virtual)
-						ss << "); assert(vmethod);\n";
-					else
-						ss << "); assert(method);\n";
+					ss << "); assert(" << method_var_name() << ");\n";
+
+					ss << "\t\tif (!" << method_var_name() << ")\n";
+					ss << "\t\t{\n";
+					ss << "\t\t\tLog::Error(cs::Red(\"autogen Error: Can't find method: " << (m.is_static ? "static " : "") << NormalizeType(ns.name) << "." << cl.name << "." << NormalizeMethodName(m.name) << "\"));\n";
+					ss << "\t\t\tLog::Flush();\n";
+					ss << "\t\t\treturn nullptr;\n";
+					ss << "\t\t}\n";
 
 					if (m.is_virtual)
 					{

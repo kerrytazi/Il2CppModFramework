@@ -20,6 +20,9 @@ struct __autogen Scene
 
 	__autogen il2cpp::Array<UnityEngine::GameObject*>* GetRootGameObjects();
 
+	// Fixed handle
+	static Scene _GetDontDestroyOnLoadScene() { return Scene{ -12 }; }
+
 	int m_Handle;
 };
 
