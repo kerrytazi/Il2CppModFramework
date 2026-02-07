@@ -29,10 +29,38 @@ public:
 	std::string_view GetName() const; // null-terminated
 	std::string_view GetNamespace() const; // null-terminated
 
-	std::span<const Method*> GetMethods() const;
-	std::span<const Field> GetFields() const;
-	std::span<const Property> GetProperties() const;
-	std::span<const Event> GetEvents() const;
+	bool IsValueType() const;
+
+	template <typename TMethod = Method>
+	auto GetMethods() const
+	{
+		static_assert(std::is_same_v<TMethod, Method>, "nuh uh");
+		return std::ranges::subrange(methods, methods + method_count);
+	}
+
+	template <typename TField = Field>
+	auto GetFields() const
+	{
+		static_assert(std::is_same_v<TField, Field>, "nuh uh");
+		return std::ranges::subrange(fields, fields + field_count)
+			| std::views::transform([](const auto& v) { return &v; });
+	}
+
+	template <typename TProperty = Property>
+	auto GetProperties() const
+	{
+		static_assert(std::is_same_v<TProperty, Property>, "nuh uh");
+		return std::ranges::subrange(properties, properties + property_count)
+			| std::views::transform([](const auto& v) { return &v; });
+	}
+
+	template <typename TEvent = Event>
+	auto GetEvents() const
+	{
+		static_assert(std::is_same_v<TEvent, Event>, "nuh uh");
+		return std::ranges::subrange(events, events + event_count)
+			| std::views::transform([](const auto& v) { return &v; });
+	}
 
 	const Method* GetVirtualMethod(const Method* method) const;
 
@@ -128,10 +156,7 @@ public:
 		auto method = FindMethodRecursive(method_name);
 		assert(method);
 
-		auto method_ptr = method->GetMethodPointer<TRet(std::remove_reference_t<TArgs>...)>();
-		assert(method_ptr);
-
-		return method_ptr(args...);
+		return method->NativeInvoke<TRet, TArgs...>(args);
 	}
 
 	// Slow!!!
@@ -146,7 +171,7 @@ public:
 		auto field = FindStaticField(field_name);
 		assert(field);
 
-		return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(static_fields) + field->GetOffset());
+		return field->GetStatic<T>();
 	}
 
 	// Slow!!!
@@ -178,6 +203,16 @@ public:
 		field->GetThreadLocal(&result);
 		return result;
 	}
+
+	std::string BuildFullName() const;
+	void BuildFullName(std::string& cache) const;
+
+	// UNSAFE. Result stored statically and will be invalidated on next call.
+	// Consider using BuildFullName instead.
+	// Unless you absolutely understand what you are doing.
+	const std::string& _BuildFullName() const;
+
+	void* _GetStaticFields() const;
 
 	void _ForceInitFull() const;
 	void _ForceInitMethods() const;

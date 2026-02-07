@@ -41,6 +41,7 @@ void MyIl2CppData::Init()
 	init_func(il2cpp_string_new_utf16);
 	init_func(il2cpp_type_get_object);
 	init_func(il2cpp_method_get_object);
+	init_func(il2cpp_runtime_invoke);
 	init_func(il2cpp_class_from_type);
 
 	init_func(il2cpp_field_static_get_value);

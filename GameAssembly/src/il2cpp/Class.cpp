@@ -28,24 +28,51 @@ std::string_view il2cpp::Class::GetNamespace() const
 	return namespaze;
 }
 
-std::span<const il2cpp::Method*> il2cpp::Class::GetMethods() const
+bool il2cpp::Class::IsValueType() const
 {
-	return std::span(methods, method_count);
+	return byval_arg.IsValueType();
 }
 
-std::span<const il2cpp::Field> il2cpp::Class::GetFields() const
+std::string il2cpp::Class::BuildFullName() const
 {
-	return std::span(fields, field_count);
+	return _BuildFullName();
 }
 
-std::span<const il2cpp::Property> il2cpp::Class::GetProperties() const
+void il2cpp::Class::BuildFullName(std::string& cache) const
 {
-	return std::span(properties, property_count);
+	cache.clear();
+
+	auto name = GetName();
+	cache.insert(cache.begin(), name.begin(), name.end());
+
+	auto k = this;
+
+	while (k->GetDeclaringClass())
+	{
+		k = k->GetDeclaringClass();
+		auto name = k->GetName();
+		cache.insert(cache.begin(), '.');
+		cache.insert(cache.begin(), name.begin(), name.end());
+	}
+
+	if (!k->GetNamespace().empty())
+	{
+		auto name = k->GetNamespace();
+		cache.insert(cache.begin(), '.');
+		cache.insert(cache.begin(), name.begin(), name.end());
+	}
 }
 
-std::span<const il2cpp::Event> il2cpp::Class::GetEvents() const
+static std::string g_build_full_name_cache;
+const std::string& il2cpp::Class::_BuildFullName() const
 {
-	return std::span(events, event_count);
+	BuildFullName(g_build_full_name_cache);
+	return g_build_full_name_cache;
+}
+
+void* il2cpp::Class::_GetStaticFields() const
+{
+	return static_fields;
 }
 
 const il2cpp::Class* il2cpp::Class::GetDeclaringClass() const
@@ -89,13 +116,13 @@ bool il2cpp::Class::IsCastable(const Class* other) const
 
 const il2cpp::Field* il2cpp::Class::FindField(std::string_view field_name) const
 {
-	for (const auto& field : GetFields())
+	for (auto field : GetFields())
 	{
-		if (field.IsStatic())
+		if (field->IsStatic())
 			continue;
 
-		if (field.GetName() == field_name)
-			return &field;
+		if (field->GetName() == field_name)
+			return field;
 	}
 
 	return nullptr;
@@ -118,16 +145,16 @@ const il2cpp::Field* il2cpp::Class::FindFieldRecursive(std::string_view field_na
 
 const il2cpp::Field* il2cpp::Class::FindStaticField(std::string_view field_name) const
 {
-	for (const auto& field : GetFields())
+	for (auto field : GetFields())
 	{
-		if (!field.IsStatic())
+		if (!field->IsStatic())
 			continue;
 
-		assert("Tried to find static field but found static literal" && (!field.IsLiteral() || field.GetName() != field_name));
-		assert("Tried to find static field but found static thread local" && (!field.IsThreadLocal() || field.GetName() != field_name));
+		assert("Tried to find static field but found static literal" && (!field->IsLiteral() || field->GetName() != field_name));
+		assert("Tried to find static field but found static thread local" && (!field->IsThreadLocal() || field->GetName() != field_name));
 
-		if (field.GetName() == field_name)
-			return &field;
+		if (field->GetName() == field_name)
+			return field;
 	}
 
 	return nullptr;
@@ -152,13 +179,13 @@ const il2cpp::Field* il2cpp::Class::FindStaticLiteralField(std::string_view fiel
 {
 	for (const auto& field : GetFields())
 	{
-		if (!field.IsStatic())
+		if (!field->IsStatic())
 			continue;
 
-		assert("Tried to find static literal field but found static thread local" && (!field.IsThreadLocal() || field.GetName() != field_name));
+		assert("Tried to find static literal field but found static thread local" && (!field->IsThreadLocal() || field->GetName() != field_name));
 
-		if (field.GetName() == field_name)
-			return &field;
+		if (field->GetName() == field_name)
+			return field;
 	}
 
 	return nullptr;
@@ -183,13 +210,13 @@ const il2cpp::Field* il2cpp::Class::FindStaticThreadLocalField(std::string_view 
 {
 	for (const auto& field : GetFields())
 	{
-		if (!field.IsStatic())
+		if (!field->IsStatic())
 			continue;
 
-		assert("Tried to find static thread local field but found static literal" && (!field.IsLiteral() || field.GetName() != field_name));
+		assert("Tried to find static thread local field but found static literal" && (!field->IsLiteral() || field->GetName() != field_name));
 
-		if (field.GetName() == field_name)
-			return &field;
+		if (field->GetName() == field_name)
+			return field;
 	}
 
 	return nullptr;
@@ -317,7 +344,7 @@ const il2cpp::Method* il2cpp::Class::_FindMethod(
 			continue;
 
 		if (ret_type.has_value())
-			if (method->GetReturnType()->GetName() != *ret_type)
+			if (method->GetReturnType()->_GetName() != *ret_type)
 				continue;
 
 		if (param_types.has_value())
@@ -328,7 +355,7 @@ const il2cpp::Method* il2cpp::Class::_FindMethod(
 			auto it2 = params_view.begin();
 			for (; it1 != param_types->end(); ++it1, ++it2)
 			{
-				if ((*it2)->GetName() != *it1)
+				if ((*it2)->_GetName() != *it1)
 					break;
 			}
 

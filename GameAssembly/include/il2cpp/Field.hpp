@@ -4,6 +4,7 @@
 
 #include "il2cpp/Type.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -33,10 +34,35 @@ public:
 	bool IsLiteral() const;
 	bool IsThreadLocal() const;
 
+	void* GetInstance(void* instance) const
+	{
+		assert(IsInstance());
+		return reinterpret_cast<uint8_t*>(instance) + GetOffset();
+	}
+
+	template <typename T>
+	T& GetInstance(void* instance) const
+	{
+		assert(IsInstance());
+		return *reinterpret_cast<T*>(GetInstance(instance));
+	}
+
+	template <typename T>
+	T& GetStatic() const
+	{
+		assert(IsStatic());
+		assert("field is literal" && !IsLiteral());
+		assert("field is thread local" && !IsThreadLocal());
+
+		return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(_GetParentStaticFields()) + GetOffset());
+	}
+
 	void GetLiteral(void* out) const;
 	void GetThreadLocal(void* out) const;
 
 private:
+
+	void* _GetParentStaticFields() const;
 
 	const char* name;
 	const Type* type;

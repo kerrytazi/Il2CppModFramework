@@ -5,17 +5,13 @@
 
 #include "il2cpp/il2cpp.hpp"
 
-namespace System { class Object; }
-namespace UnityEngine { class Object; }
+#include "UnityEngine/Object.hpp"
 
 namespace il2cpp
 {
 
 // Weak reference for objects.
-// NOTE: UnityEngine::Object uses different GarbageCollector.
-// For Unity objects use gc_ref<UnityEngine::Object> instead of gc_ref<System::Object>.
-// Or specific type like gc_ref<UnityEngine::Component>.
-template <typename T> requires std::is_base_of_v<System::Object, std::remove_cv_t<T>>
+template <typename T>
 class gc_ref
 {
 public:
@@ -27,21 +23,18 @@ public:
 	template <typename T2>
 	explicit gc_ref(T2* obj)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
 		Create(obj);
 	}
 
 	template <typename T2>
 	gc_ref(const gc_ref<T2>& other)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
 		Create(other.obj_);
 	}
 
 	template <typename T2>
 	gc_ref& operator=(const gc_ref<T2>& other)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
 		Destroy();
 		Create(other.obj_);
 		return *this;
@@ -50,14 +43,12 @@ public:
 	template <typename T2>
 	gc_ref(gc_ref<T2>&& other)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
 		swap(other);
 	}
 
 	template <typename T2>
 	gc_ref& operator=(gc_ref<T2>&& other)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
 		swap(other);
 		return *this;
 	}
@@ -70,7 +61,6 @@ public:
 	template <typename T2>
 	bool operator==(const gc_ref<T2>& other) const
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
 		return obj_ == other.obj_;
 	}
 
@@ -91,9 +81,17 @@ public:
 		if (gchandle_get_target(gc_handle_) != obj_)
 			return false;
 
-		if constexpr (std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>>)
+		if constexpr (std::is_base_of_v<UnityEngine::Object, T>)
+		{
 			if (!obj_->_IsValid())
 				return false;
+		}
+		else
+		{
+			if (auto uobj = obj_->TryDownCast<UnityEngine::Object>())
+				if (!uobj->_IsValid())
+					return false;
+		}
 
 		return true;
 	}
@@ -101,8 +99,6 @@ public:
 	template <typename T2>
 	constexpr void swap(gc_ref<T2>& other)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
-
 		auto tmp_obj_ = other.obj_;
 		auto tmp_gc_handle_ = other.gc_handle_;
 
@@ -115,14 +111,12 @@ public:
 
 private:
 
-	template <typename T2> requires std::is_base_of_v<System::Object, std::remove_cv_t<T2>>
+	template <typename T2>
 	friend class gc_ref;
 
 	template <typename T2>
 	void Create(T2* obj)
 	{
-		static_assert(std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T>> == std::is_base_of_v<UnityEngine::Object, std::remove_cv_t<T2>>, "Invalid gc_ref Conversion");
-
 		obj_ = static_cast<T*>(obj);
 
 		if (obj)

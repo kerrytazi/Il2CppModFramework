@@ -3,6 +3,7 @@
 #include "il2cpp/Field.hpp"
 #include "il2cpp/Type.hpp"
 #include "il2cpp/il2cpp.hpp"
+#include "il2cpp/Class.hpp"
 
 bool il2cpp::Field::IsStatic() const
 {
@@ -35,4 +36,9 @@ void il2cpp::Field::GetThreadLocal(void* out) const
 	assert("field is literal" && !IsLiteral());
 	assert("field is not thread local" && IsThreadLocal());
 	il2cpp::field_static_get_value(this, out);
+}
+
+void* il2cpp::Field::_GetParentStaticFields() const
+{
+	return GetParent()->_GetStaticFields();
 }

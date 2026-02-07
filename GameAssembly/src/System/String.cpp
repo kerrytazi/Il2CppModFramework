@@ -17,24 +17,32 @@ System::String* System::String::New(const std::u16string_view& str)
 
 std::string System::String::AsString() const
 {
-	if ((uintptr_t)this == 0)
-		return "(null)";
-
-	return su::u8(AsU16StringView());
+	return _AsString();
 }
 
-static std::vector<char> g_as_string_cache;
-
-std::string_view System::String::AsStringView() const
+void System::String::AsString(std::string& cache) const
 {
 	if ((uintptr_t)this == 0)
-		return "(null)";
+	{
+		cache = "(null)";
+		return;
+	}
 
 	auto u16_str = AsU16StringView();
-	g_as_string_cache.reserve(u16_str.size() * 2 + 1);
-	auto result_size = su::u8(g_as_string_cache.data(), g_as_string_cache.capacity(), u16_str);
+	cache.resize(u16_str.size() * 2 + 1); // allocate more
+	auto result_size = su::u8(cache.data(), cache.capacity(), u16_str);
 
 	assert(result_size >= u16_str.size());
-	g_as_string_cache.data()[result_size] = '\0';
-	return std::string_view(g_as_string_cache.data(), result_size);
+	cache.resize(result_size); // shrink to correct size
+}
+
+static std::string g_null_str = "(null)";
+static std::string g_as_string_cache;
+const std::string& System::String::_AsString() const
+{
+	if ((uintptr_t)this == 0)
+		return g_null_str;
+
+	AsString(g_as_string_cache);
+	return g_as_string_cache;
 }

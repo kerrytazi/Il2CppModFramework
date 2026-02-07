@@ -41,13 +41,12 @@ public:
 	}
 
 	std::string AsString() const;
+	void AsString(std::string& cache) const;
 
 	// UNSAFE. Result stored statically and will be invalidated on next call.
-	// null-terminated
-	// No thread safety.
 	// Consider using AsU16StringView or AsString instead.
 	// Unless you absolutely understand what you are doing.
-	std::string_view AsStringView() const;
+	const std::string& _AsString() const;
 
 private:
 

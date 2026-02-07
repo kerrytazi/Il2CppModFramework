@@ -9,6 +9,7 @@
 
 namespace System { class String; }
 namespace System { class Object; }
+namespace System { class Exception; }
 
 namespace il2cpp
 {
@@ -38,6 +39,8 @@ struct CachedClass : CachedClassFullName
 	const il2cpp::Class* klass;
 };
 
+struct Il2CppException;
+
 struct MyIl2CppData
 {
 	HINSTANCE GameAssembly;
@@ -52,8 +55,9 @@ struct MyIl2CppData
 	System::Object* (*il2cpp_array_new)(const il2cpp::Class* element_klass, uintptr_t length);
 	System::String* (*il2cpp_string_new)(const char* str, int32_t len);
 	System::String* (*il2cpp_string_new_utf16)(const char16_t* str, int32_t len);
-	System::Object* (*il2cpp_type_get_object)(const il2cpp::Type *type);
-	System::Object* (*il2cpp_method_get_object)(const il2cpp::Method *type);
+	System::Object* (*il2cpp_type_get_object)(const il2cpp::Type* type);
+	System::Object* (*il2cpp_method_get_object)(const il2cpp::Method* method);
+	System::Object* (*il2cpp_runtime_invoke)(const il2cpp::Method* method, void* _this, void** params, System::Exception** exc);
 	il2cpp::Class* (*il2cpp_class_from_type)(const il2cpp::Type* type);
 
 	void (*il2cpp_field_static_get_value)(const il2cpp::Field* field, void* out);

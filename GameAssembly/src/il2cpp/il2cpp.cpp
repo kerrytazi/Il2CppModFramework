@@ -138,6 +138,12 @@ System::Object* il2cpp::method_get_object(const Method* method)
 	return g_il2cpp_data.il2cpp_method_get_object(method);
 }
 
+System::Object* il2cpp::runtime_invoke(const Method* method, void* obj, void** params, System::Exception** exc)
+{
+	assert(g_il2cpp_data.il2cpp_runtime_invoke);
+	return g_il2cpp_data.il2cpp_runtime_invoke(method, obj, params, exc);
+}
+
 const il2cpp::Class* il2cpp::class_from_type(const Type* type)
 {
 	assert(g_il2cpp_data.il2cpp_class_from_type);

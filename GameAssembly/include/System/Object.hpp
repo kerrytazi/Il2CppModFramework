@@ -58,7 +58,7 @@ public:
 		auto field = klass->FindFieldRecursive(field_name);
 		assert(field);
 
-		return *reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(this) + field->GetOffset());
+		return field->GetInstance<T>(this);
 	}
 
 	struct _GetFieldResult
@@ -81,10 +81,10 @@ public:
 
 	auto GetFields()
 	{
-		auto read_field = [this](const il2cpp::Field& field) {
+		auto read_field = [this](const il2cpp::Field* field) {
 			return _GetFieldResult{
-				.field = &field,
-				.data = reinterpret_cast<uint8_t*>(this) + field.GetOffset(),
+				.field = field,
+				.data = reinterpret_cast<uint8_t*>(this) + field->GetOffset(),
 			};
 		};
 
@@ -99,6 +99,17 @@ public:
 		return GetFields()
 			| std::views::filter(&System::Object::_GetFieldResult::IsTypeClass<std::remove_pointer_t<TClass>>)
 			| std::views::transform(&System::Object::_GetFieldResult::GetData<TClass>);
+	}
+
+	void* Unbox()
+	{
+		return this + 1;
+	}
+
+	template <typename T>
+	T& Unbox()
+	{
+		return *static_cast<T*>(Unbox());
 	}
 
 private:

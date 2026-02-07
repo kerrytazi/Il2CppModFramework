@@ -8,7 +8,12 @@
 #include "il2cpp/il2cpp.hpp"
 #include "il2cpp_data.hpp"
 
-const std::string& il2cpp::Type::GetName() const
+std::string il2cpp::Type::GetName() const
+{
+	return _GetName();
+}
+
+const std::string& il2cpp::Type::_GetName() const
 {
 	assert(g_il2cpp_data.GameAssembly);
 	assert(g_il2cpp_data.il2cpp_type_get_name);

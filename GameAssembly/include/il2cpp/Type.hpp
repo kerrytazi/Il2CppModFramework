@@ -3,10 +3,13 @@
 #include "common/NoImplement.hpp"
 
 #include "il2cpp/ClassFinder.hpp"
+#include "System/primitives.hpp"
 
 #include <string>
+#include <array>
 
 namespace System { class Type; }
+namespace System { class String; }
 
 namespace il2cpp
 {
@@ -18,7 +21,11 @@ class Type : _NoImplement
 {
 public:
 
-	const std::string& GetName() const; // Reference may be invalid on consequent call
+	std::string GetName() const;
+
+	// USAFE. Reference may be invalid on consequent call
+	const std::string& _GetName() const;
+
 	int SizeOfType() const; // 0 = void, -1 = unknown
 	System::Type* ToReflectionType() const;
 	const Class* ToClass() const;
@@ -26,8 +33,75 @@ public:
 	template <typename TClass>
 	bool IsTypeClass() const
 	{
+		if constexpr (std::is_same_v<TClass, System::Void>)
+			return type == Il2CppTypeEnum::Void;
+		if constexpr (std::is_same_v<TClass, System::Boolean>)
+			return type == Il2CppTypeEnum::Boolean;
+		if constexpr (std::is_same_v<TClass, System::Char>)
+			return type == Il2CppTypeEnum::Char;
+		if constexpr (std::is_same_v<TClass, System::SByte>)
+			return type == Il2CppTypeEnum::I1;
+		if constexpr (std::is_same_v<TClass, System::Byte>)
+			return type == Il2CppTypeEnum::U1;
+		if constexpr (std::is_same_v<TClass, System::Int16>)
+			return type == Il2CppTypeEnum::I2;
+		if constexpr (std::is_same_v<TClass, System::UInt16>)
+			return type == Il2CppTypeEnum::U2;
+		if constexpr (std::is_same_v<TClass, System::Int32>)
+			return type == Il2CppTypeEnum::I4;
+		if constexpr (std::is_same_v<TClass, System::UInt32>)
+			return type == Il2CppTypeEnum::U4;
+		if constexpr (std::is_same_v<TClass, System::Int64>)
+			return type == Il2CppTypeEnum::I8;
+		if constexpr (std::is_same_v<TClass, System::UInt64>)
+			return type == Il2CppTypeEnum::U8;
+		if constexpr (std::is_same_v<TClass, System::Single>)
+			return type == Il2CppTypeEnum::R4;
+		if constexpr (std::is_same_v<TClass, System::Double>)
+			return type == Il2CppTypeEnum::R8;
+		if constexpr (std::is_same_v<TClass, System::IntPtr>)
+			return type == Il2CppTypeEnum::I;
+		if constexpr (std::is_same_v<TClass, System::UIntPtr>)
+			return type == Il2CppTypeEnum::U;
+		if constexpr (std::is_same_v<TClass, System::String>)
+			return type == Il2CppTypeEnum::String;
+
 		return ToClass() == il2cpp::Find<TClass>();
 	}
+
+	bool IsTypeFastSearch() const
+	{
+		static constexpr std::array<bool, 64> FAST_CHECK = []() {
+			std::array<bool, 64> result{};
+
+			result[size_t(Il2CppTypeEnum::Void)] = true;
+			result[size_t(Il2CppTypeEnum::Boolean)] = true;
+			result[size_t(Il2CppTypeEnum::Char)] = true;
+			result[size_t(Il2CppTypeEnum::I1)] = true;
+			result[size_t(Il2CppTypeEnum::U1)] = true;
+			result[size_t(Il2CppTypeEnum::I2)] = true;
+			result[size_t(Il2CppTypeEnum::U2)] = true;
+			result[size_t(Il2CppTypeEnum::I4)] = true;
+			result[size_t(Il2CppTypeEnum::U4)] = true;
+			result[size_t(Il2CppTypeEnum::I8)] = true;
+			result[size_t(Il2CppTypeEnum::U8)] = true;
+			result[size_t(Il2CppTypeEnum::R4)] = true;
+			result[size_t(Il2CppTypeEnum::R8)] = true;
+			result[size_t(Il2CppTypeEnum::String)] = true;
+
+			result[size_t(Il2CppTypeEnum::I)] = true;
+			result[size_t(Il2CppTypeEnum::U)] = true;
+
+			return result;
+		}();
+
+		if ((size_t)type < FAST_CHECK.size())
+			return FAST_CHECK[(size_t)type];
+
+		return false;
+	}
+
+	bool IsValueType() const { return valuetype; }
 
 private:
 

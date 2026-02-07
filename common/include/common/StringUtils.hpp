@@ -5,6 +5,7 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <array>
 #include <string_view>
 #include <algorithm>
 #include <ranges>
@@ -293,4 +294,250 @@ inline std::vector<std::basic_string<TChar>> Split(const std::basic_string_view<
 	return std::vector(view.begin(), view.end());
 }
 
+class UTF8Iterator
+{
+public:
+
+	using value_type = uint32_t;
+	using difference_type = ptrdiff_t;
+
+	explicit UTF8Iterator(const char* ptr)
+		: p{ ptr }
+	{
+		Recalc();
+	}
+
+	UTF8Iterator()
+		: UTF8Iterator(nullptr)
+	{
+	}
+
+	UTF8Iterator& operator++()
+	{
+		p += char_size;
+		Recalc();
+		return *this;
+	}
+
+	UTF8Iterator operator++(int)
+	{
+		UTF8Iterator result(*this);
+		++(*this);
+		return result;
+	}
+
+	value_type operator*() const
+	{
+		return unicode_val;
+	}
+
+	bool operator==(const UTF8Iterator& other) const { return p == other.p; }
+
+private:
+
+	void Recalc()
+	{
+		if (!p || p[0] == '\0')
+		{
+#ifndef NDEBUG
+			char_size = 1;
+			unicode_val = 0;
+#endif // !NDEBUG
+			return;
+		}
+
+		switch (char_size = CHAR_SIZES[(uint8_t)p[0]])
+		{
+			[[unlikely]] case 0:
+				char_size = 1;
+				unicode_val = 0xFFFD;
+				break;
+
+			case 1:
+				unicode_val = uint32_t(p[0]);
+				break;
+
+			case 2:
+				unicode_val = ((uint32_t(p[0]) & 0x1F) << 6) | (uint32_t(p[1]) & 0x3F);
+				break;
+
+			case 3:
+				unicode_val = ((uint32_t(p[0]) & 0x0F) << 12) | ((uint32_t(p[1]) & 0x3F) << 6) | (uint32_t(p[2]) & 0x3F);
+				break;
+
+			case 4:
+				unicode_val = ((uint32_t(p[0]) & 0x07) << 18) | ((uint32_t(p[1]) & 0x3F) << 12) | ((uint32_t(p[2]) & 0x3F) << 6) | (uint32_t(p[3]) & 0x3F);
+				break;
+		}
+	}
+
+	const char* p;
+	uint32_t char_size;
+	uint32_t unicode_val;
+
+	// ASCII: 0xxxxxxx
+	// 2-byte: 110xxxxx 10xxxxxx
+	// 3-byte: 1110xxxx 10xxxxxx 10xxxxxx
+	// 4-byte: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+	static constexpr std::array<uint8_t, 256> CHAR_SIZES = ([]() {
+		std::array<uint8_t, 256> result{};
+
+		// 1-byte UTF-8: 0xxxxxxx (ASCII)
+		for (int i = 0; i < 128; ++i)
+			result[i] = 1;
+
+		// Continuation bytes: 10xxxxxx
+		// These are never the first byte of a character
+		for (int i = 0x80; i < 0xC0; ++i)      // 128-191
+			result[i] = 0;  // Invalid as first byte
+
+		// 2-byte UTF-8 first byte: 110xxxxx (192-223)
+		for (int i = 0xC0; i < 0xE0; ++i)      // 192-223
+			result[i] = 2;
+
+		// 3-byte UTF-8 first byte: 1110xxxx (224-239)
+		for (int i = 0xE0; i < 0xF0; ++i)      // 224-239
+			result[i] = 3;
+
+		// 4-byte UTF-8 first byte: 11110xxx (240-247)
+		for (int i = 0xF0; i < 0xF8; ++i)      // 240-247
+			result[i] = 4;
+
+		// Invalid UTF-8 start bytes: 11111xxx (248-255)
+		for (int i = 0xF8; i < 256; ++i)       // 248-255
+			result[i] = 0;  // Invalid
+
+		return result;
+	})();
+};
+
+template <typename TIt>
+class UnicodeIterator
+{
+public:
+
+	using value_type = std::string_view;
+	using difference_type = typename std::iterator_traits<TIt>::difference_type;
+
+	explicit UnicodeIterator(TIt _it)
+		: it{ _it }
+	{
+	}
+
+	UnicodeIterator()
+		: UnicodeIterator(TIt{})
+	{
+	}
+
+	UnicodeIterator& operator++()
+	{
+		++it;
+		return *this;
+	}
+
+	UnicodeIterator operator++(int)
+	{
+		UnicodeIterator result(*this);
+		++(*this);
+		return result;
+	}
+
+	value_type operator*() const
+	{
+		const_cast<UnicodeIterator*>(this)->Recalc();
+		return Convert();
+	}
+
+	bool operator==(const UnicodeIterator& other) const { return it == other.it; }
+
+private:
+
+	std::string_view Convert() const
+	{
+		return std::string_view(buf, buf + char_size);
+	}
+
+	void Recalc()
+	{
+		uint32_t uni = *it;
+
+		if (uni <= 0x7F)
+		{
+			char_size = 1;
+			buf[0] = (char)uni;
+		}
+		else
+		if (uni <= 0x7FF)
+		{
+			// 2-byte UTF-8: 110xxxxx 10xxxxxx
+			char_size = 2;
+			buf[0] = (char)(0xC0 | (uni >> 6));
+			buf[1] = (char)(0x80 | (uni & 0x3F));
+		}
+		else
+		if (uni <= 0xFFFF)
+		{
+			// 3-byte UTF-8: 1110xxxx 10xxxxxx 10xxxxxx
+			char_size = 3;
+			buf[0] = (char)(0xE0 | (uni >> 12));
+			buf[1] = (char)(0x80 | ((uni >> 6) & 0x3F));
+			buf[2] = (char)(0x80 | (uni & 0x3F));
+		}
+		else
+		if (uni <= 0x10FFFF)
+		{
+			// 4-byte UTF-8: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			char_size = 4;
+			buf[0] = (char)(0xF0 | (uni >> 18));
+			buf[1] = (char)(0x80 | ((uni >> 12) & 0x3F));
+			buf[2] = (char)(0x80 | ((uni >> 6) & 0x3F));
+			buf[3] = (char)(0x80 | (uni & 0x3F));
+		}
+		else
+		{
+			// Invalid Unicode code point (beyond maximum valid value 0x10FFFF)
+			char_size = 0;
+		}
+
+		buf[char_size] = '\0';
+	}
+
+	TIt it;
+	uint8_t char_size;
+	char buf[7];
+};
+
+class UTF8StringView
+{
+public:
+
+	UTF8StringView(std::string_view _sv)
+		: sv{ _sv }
+	{
+	}
+
+	UTF8Iterator begin() const { return UTF8Iterator(sv.data()); }
+	UTF8Iterator end() const { return UTF8Iterator(sv.data() + sv.size()); }
+
+private:
+
+	std::string_view sv;
+};
+
 } // namespace su
+
+
+namespace std::ranges
+{
+
+template <>
+constexpr bool enable_borrowed_range<su::UTF8StringView> = true;
+
+} // std::ranges
+
+static_assert(std::forward_iterator<su::UTF8Iterator>, "forward_iterator<su::UTF8Iterator>");
+static_assert(std::sentinel_for<su::UTF8Iterator, su::UTF8Iterator>, "sentinel_for<su::UTF8Iterator, su::UTF8Iterator>");
+
+static_assert(std::ranges::forward_range<su::UTF8StringView>, "forward_range<su::UTF8StringView>");
+static_assert(std::ranges::borrowed_range<su::UTF8StringView>, "borrowed_range<su::UTF8StringView>");
+

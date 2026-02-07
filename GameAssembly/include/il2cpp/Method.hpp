@@ -5,7 +5,9 @@
 
 #include "il2cpp/Type.hpp"
 #include "il2cpp/ClassFinder.hpp"
+#include "il2cpp/il2cpp.hpp"
 
+#include <cassert>
 #include <initializer_list>
 #include <string_view>
 #include <algorithm>
@@ -13,6 +15,7 @@
 #include <optional>
 
 namespace System::Reflection { class MethodInfo; }
+namespace System { class Exception; }
 
 namespace il2cpp
 {
@@ -26,6 +29,7 @@ public:
 	const Class* GetClass() const { return klass; }
 	std::string_view GetName() const { return name; } // null-terminated
 
+	bool IsInstance() const { return !IsStatic(); }
 	bool IsStatic() const { return flags & METHOD_ATTRIBUTE_STATIC; }
 	bool IsFinal() const { return flags & METHOD_ATTRIBUTE_FINAL; }
 	bool IsVirtual() const { return flags & METHOD_ATTRIBUTE_VIRTUAL; }
@@ -37,10 +41,12 @@ public:
 	const Type* GetReturnType() const { return return_type; }
 
 	size_t GetParametersCount() const { return parameters_count; }
+	const Type* GetParameterAt(size_t index) const { return parameters[index]; }
+
 	auto GetParameterTypesView() const
 	{
 		const auto get_paramter_by_index = [this](size_t index) {
-			return (const Type*)parameters[index];
+			return GetParameterAt(index);
 		};
 
 		return
@@ -68,7 +74,53 @@ public:
 
 	System::Reflection::MethodInfo* ToReflectionMethod() const;
 
+	template <typename TRet, typename... TArgs>
+	TRet NativeInvoke(TArgs... args) const
+	{
+		assert(sizeof...(TArgs) == parameters_count + (uint8_t)IsInstance());
+		auto method_ptr = GetMethodPointer<TRet(std::remove_reference_t<TArgs>...)>();
+		assert(method_ptr);
+		return method_ptr(args...);
+	}
+
+	template <typename TRet, typename... TArgs>
+	std::optional<TRet> RuntimeInvoke(void* obj, TArgs... args) const
+	{
+		assert(sizeof...(TArgs) == parameters_count);
+		assert(IsStatic() == (obj == nullptr));
+
+		void* params[] = { Voidify(args)..., nullptr };
+		System::Exception* exc = nullptr;
+		auto result = il2cpp::runtime_invoke(this, obj, params, &exc);
+
+		if (exc)
+		{
+			_LogRuntimeInvoke(exc);
+			return std::nullopt;
+		}
+
+		if constexpr (std::is_pointer_v<TRet>)
+			return static_cast<TRet>(result);
+		else
+			return *static_cast<TRet*>(_ObjectUnbox(result));
+	}
+
 private:
+
+	template <typename T>
+	static void* Voidify(T& arg)
+	{
+		return static_cast<void*>(&arg);
+	}
+
+	template <typename T>
+	static void* Voidify(T* arg)
+	{
+		return static_cast<void*>(arg);
+	}
+
+	void _LogRuntimeInvoke(System::Exception* exc) const;
+	void* _ObjectUnbox(System::Object* obj);
 
 	using Il2CppMethodPointer = void(*)();
 	using InvokerMethod = void(*)(Il2CppMethodPointer, const Method*, void*, void**, void*);

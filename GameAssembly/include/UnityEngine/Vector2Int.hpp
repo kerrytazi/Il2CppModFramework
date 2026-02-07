@@ -5,12 +5,10 @@
 namespace UnityEngine
 {
 
-struct __autogen Rect
+struct __autogen Vector2Int
 {
-	float left;
-	float top;
-	float right;
-	float bottom;
+	int x;
+	int y;
 };
 
 } // namespace UnityEngine

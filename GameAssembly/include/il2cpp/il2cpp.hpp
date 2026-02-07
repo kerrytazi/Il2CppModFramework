@@ -4,6 +4,7 @@
 
 namespace System { class String; }
 namespace System { class Object; }
+namespace System { class Exception; }
 
 namespace il2cpp
 {
@@ -20,6 +21,7 @@ System::String* string_new(const char* str, int32_t len);
 System::String* string_new_utf16(const char16_t* str, int32_t len);
 System::Object* type_get_object(const Type* type);
 System::Object* method_get_object(const Method* method);
+System::Object* runtime_invoke(const Method* method, void* obj, void** params, System::Exception** exc);
 const il2cpp::Class* class_from_type(const Type* type);
 
 const void field_static_get_value(const Field* field, void* out);
