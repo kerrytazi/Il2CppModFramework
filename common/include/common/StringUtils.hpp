@@ -247,7 +247,7 @@ inline size_t u8(char* out, size_t out_size, const T& val, int base = 10)
 template <typename T>
 inline std::string u8(const T& val, int base = 10)
 {
-	size_t size = u8<T>(nullptr, 0, val);
+	size_t size = u8<T>(nullptr, 0, val, base);
 	std::string result(size, '\0');
 	u8<T>(result.data(), size, val, base);
 	return result;
@@ -262,7 +262,7 @@ inline size_t u16(char16_t* out, size_t out_size, const T& val, int base = 10)
 template <typename T>
 inline std::u16string u16(const T& val, int base = 10)
 {
-	size_t size = u16<T>(nullptr, 0, val);
+	size_t size = u16<T>(nullptr, 0, val, base);
 	std::u16string result(size, '\0');
 	u16<T>(result.data(), size, val, base);
 	return result;
