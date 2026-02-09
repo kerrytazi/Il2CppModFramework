@@ -21,7 +21,7 @@ public:
 
 	Object* TryDownCast(const il2cpp::Class* derived)
 	{
-		if (GetClass()->IsBaseOf(derived))
+		if (GetClass()->CanDownCastTo(derived))
 			return this;
 
 		return nullptr;

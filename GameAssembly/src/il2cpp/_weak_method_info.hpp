@@ -25,7 +25,7 @@ struct WeakMethodInfo
 
 	bool IsAlive() const { return obj.is_alive(); }
 
-	il2cpp::gc_ref<System::Object> obj;
+	gc_wref<System::Object> obj;
 	il2cpp::TmpMethodInfo* method;
 };
 

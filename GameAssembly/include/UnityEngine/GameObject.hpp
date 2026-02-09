@@ -14,12 +14,15 @@ namespace UnityEngine::SceneManagement { struct Scene; }
 namespace UnityEngine
 {
 
+enum class PrimitiveType;
 class Component;
 class Transform;
 
 class __autogen GameObject : public UnityEngine::Object
 {
 public:
+
+	__autogen static UnityEngine::GameObject* CreatePrimitive(UnityEngine::PrimitiveType type);
 
 #if ICMF_UNITY_VERSION_NUM >= 2022308945
 	__autogen System::Int32 GetComponentCount();

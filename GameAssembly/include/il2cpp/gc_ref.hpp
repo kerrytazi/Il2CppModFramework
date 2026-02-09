@@ -10,56 +10,70 @@
 namespace il2cpp
 {
 
-// Weak reference for objects.
-template <typename T>
-class gc_ref
+template <typename T, bool Strong>
+class gc_ref_base
 {
 public:
 
 	using value_type = T;
 
-	gc_ref() = default;
+	gc_ref_base() = default;
 
 	template <typename T2>
-	explicit gc_ref(T2* obj)
+	explicit gc_ref_base(T2* obj)
 	{
 		Create(obj);
 	}
 
-	template <typename T2>
-	gc_ref(const gc_ref<T2>& other)
+	template <typename T2, bool Strong2>
+	gc_ref_base(const gc_ref_base<T2, Strong2>& other)
 	{
-		Create(other.obj_);
+		Create(other ? other.obj_ : nullptr);
 	}
 
-	template <typename T2>
-	gc_ref& operator=(const gc_ref<T2>& other)
+	template <typename T2, bool Strong2>
+	gc_ref_base& operator=(const gc_ref_base<T2, Strong2>& other)
 	{
 		Destroy();
-		Create(other.obj_);
+		Create(other ? other.obj_ : nullptr);
 		return *this;
 	}
 
 	template <typename T2>
-	gc_ref(gc_ref<T2>&& other)
+	gc_ref_base(gc_ref_base<T2, Strong>&& other)
 	{
 		swap(other);
 	}
 
 	template <typename T2>
-	gc_ref& operator=(gc_ref<T2>&& other)
+	gc_ref_base(gc_ref_base<T2, !Strong>&& other)
+	{
+		Create(other ? other.obj_ : nullptr);
+		other.Destroy();
+	}
+
+	template <typename T2>
+	gc_ref_base& operator=(gc_ref_base<T2, Strong>&& other)
 	{
 		swap(other);
 		return *this;
 	}
 
-	~gc_ref()
+	template <typename T2>
+	gc_ref_base& operator=(gc_ref_base<T2, !Strong>&& other)
+	{
+		Create(other ? other.obj_ : nullptr);
+		other.Destroy();
+		return *this;
+	}
+
+	~gc_ref_base()
 	{
 		Destroy();
 	}
 
-	template <typename T2>
-	bool operator==(const gc_ref<T2>& other) const
+	template <typename T2, bool Strong2>
+	bool operator==(const gc_ref_base<T2, Strong2>& other) const
 	{
 		return obj_ == other.obj_;
 	}
@@ -67,7 +81,7 @@ public:
 	T* operator->() const { assert(is_alive()); return obj_; }
 	T& operator*() const { assert(is_alive()); return *obj_; }
 
-	// Result of get_obj may be non-null but invalid after gc_ref destructor.
+	// Result of get_obj may be non-null but invalid after gc_ref_base destructor.
 	// Consider using operators *, -> instead
 	T* get_obj() const { return obj_; }
 
@@ -78,26 +92,18 @@ public:
 		if (!obj_)
 			return false;
 
-		if (gchandle_get_target(gc_handle_) != obj_)
-			return false;
-
-		if constexpr (std::is_base_of_v<UnityEngine::Object, T>)
-		{
-			if (!obj_->_IsValid())
+		if constexpr (!Strong)
+			if (gchandle_get_target(gc_handle_) != obj_)
 				return false;
-		}
-		else
-		{
-			if (auto uobj = obj_->TryDownCast<UnityEngine::Object>())
-				if (!uobj->_IsValid())
-					return false;
-		}
+
+		if (!CheckValidObj(obj_))
+			return false;
 
 		return true;
 	}
 
 	template <typename T2>
-	constexpr void swap(gc_ref<T2>& other)
+	constexpr void swap(gc_ref_base<T2, Strong>& other)
 	{
 		auto tmp_obj_ = other.obj_;
 		auto tmp_gc_handle_ = other.gc_handle_;
@@ -111,16 +117,43 @@ public:
 
 private:
 
-	template <typename T2>
-	friend class gc_ref;
+	template <typename T2, bool Strong2>
+	friend class gc_ref_base;
 
 	template <typename T2>
+	static bool CheckValidObj(T2* obj)
+	{
+		if constexpr (std::is_base_of_v<UnityEngine::Object, T>)
+		{
+			if (!obj->_IsValid())
+				return false;
+		}
+		else
+		if constexpr (std::is_same_v<System::Object, T>)
+		{
+			if (auto uobj = obj->TryDownCast<UnityEngine::Object>())
+				if (!uobj->_IsValid())
+					return false;
+		}
+
+		return true;
+	}
+
+	template <typename T2> requires std::is_base_of_v<System::Object, T2>
 	void Create(T2* obj)
 	{
+		if (obj && !CheckValidObj(obj))
+			obj = nullptr;
+
 		obj_ = static_cast<T*>(obj);
 
 		if (obj)
-			gc_handle_ = gchandle_new_weakref(obj_, false);
+		{
+			if constexpr (Strong)
+				gc_handle_ = gchandle_new(obj_, false);
+			else
+				gc_handle_ = gchandle_new_weakref(obj_, false);
+		}
 	}
 
 	void Destroy()
@@ -138,7 +171,16 @@ private:
 	uint32_t gc_handle_ = 0;
 };
 
-template <typename T>
-gc_ref(T*) -> gc_ref<T>;
-
 } // namespace il2cpp
+
+template <typename T>
+using gc_ref = il2cpp::gc_ref_base<T, true>;
+
+template <typename T>
+using gc_wref = il2cpp::gc_ref_base<T, false>;
+
+template <typename T> requires std::is_base_of_v<System::Object, T>
+gc_ref<T> make_ref(T* obj) { return gc_ref<T>(obj); }
+
+template <typename T> requires std::is_base_of_v<System::Object, T>
+gc_wref<T> make_wref(T* obj) { return gc_wref<T>(obj); }

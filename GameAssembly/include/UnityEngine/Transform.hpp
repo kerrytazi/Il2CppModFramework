@@ -52,6 +52,11 @@ public:
 
 	__autogen UnityEngine::Transform* GetChild(System::Int32 index);
 
+	__autogen System::Void SetAsFirstSibling();
+	__autogen System::Void SetAsLastSibling();
+	__autogen System::Void SetSiblingIndex(System::Int32 index);
+	__autogen System::Int32 GetSiblingIndex();
+
 	auto GetChildrenView()
 	{
 		auto get_child = [this](System::Int32 index) {
@@ -65,13 +70,9 @@ public:
 
 	auto GetGameObjectsView()
 	{
-		auto get_child = [this](UnityEngine::Transform* transform) {
-			return transform->get_gameObject();
-		};
-
 		return
 			GetChildrenView() |
-			std::views::transform(get_child);
+			std::views::transform(&Component::get_gameObject);
 	}
 };
 

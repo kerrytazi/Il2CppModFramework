@@ -12,7 +12,7 @@ void RegisterLogger(std::function<std::shared_ptr<Logger>()> create_logger, int 
 template <typename T, int priority = 50>
 struct RegisterLoggerStatic
 {
-	inline static bool registered = ([](){
+	inline static bool registered = ([]() {
 		RegisterLogger([]() -> std::shared_ptr<Logger> {
 			return std::make_unique<T>();
 		}, priority);

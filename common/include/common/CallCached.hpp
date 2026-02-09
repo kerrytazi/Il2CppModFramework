@@ -10,13 +10,13 @@ public:
 
 	using value_type = std::remove_reference_t<std::invoke_result_t<TFunc>>;
 
-	value_type& Deref()
+	static value_type& Deref()
 	{
 		TryInit();
 		return *value_;
 	}
 
-	void TryInit()
+	static void TryInit()
 	{
 		if (!value_.has_value()) [[unlikely]]
 			value_ = TFunc{}();
@@ -24,7 +24,7 @@ public:
 
 private:
 
-	std::optional<value_type> value_;
+	static inline std::optional<value_type> value_;
 };
 
 void __RegisterCallCached(void(*init)());
@@ -34,8 +34,7 @@ struct __RegisterCallCachedStruct
 {
 	inline static bool initialized = []() {
 		__RegisterCallCached([]() {
-			CallCachedStorage<TFunc> storage;
-			storage.TryInit();
+			CallCachedStorage<TFunc>::TryInit();
 		});
 
 		return true;
@@ -48,6 +47,5 @@ template <typename TFunc>
 auto CallCached(TFunc&&)
 {
 	(void)__RegisterCallCachedStruct<TFunc>{};
-	CallCachedStorage<TFunc> storage;
-	return storage.Deref();
+	return CallCachedStorage<TFunc>::Deref();
 }

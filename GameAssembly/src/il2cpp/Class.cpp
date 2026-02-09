@@ -87,7 +87,7 @@ const il2cpp::Class* il2cpp::Class::GetElementClass() const
 
 const il2cpp::Method* il2cpp::Class::GetVirtualMethod(const Method* method) const
 {
-	assert(IsCastable(method->GetClass()));
+	assert(CanDownCastTo(method->GetClass()) || CanUpCastTo(method->GetClass()));
 	auto slot = method->GetVirtualMethodSlot();
 	assert(slot < vtable_count);
 	return vtable[slot].method;
@@ -98,7 +98,7 @@ const il2cpp::Class* il2cpp::Class::GetBase() const
 	return parent;
 }
 
-bool il2cpp::Class::IsBaseOf(const Class* _derived) const
+bool il2cpp::Class::CanDownCastTo(const Class* _derived) const
 {
 	if (_derived == nullptr)
 		return false;
@@ -106,12 +106,12 @@ bool il2cpp::Class::IsBaseOf(const Class* _derived) const
 	if (this == _derived)
 		return true;
 
-	return IsBaseOf(_derived->GetBase());
+	return CanDownCastTo(_derived->GetBase());
 }
 
-bool il2cpp::Class::IsCastable(const Class* other) const
+bool il2cpp::Class::CanUpCastTo(const Class* _base) const
 {
-	return IsBaseOf(other) || other->IsBaseOf(this);
+	return _base->CanDownCastTo(this);
 }
 
 const il2cpp::Field* il2cpp::Class::FindField(std::string_view field_name) const

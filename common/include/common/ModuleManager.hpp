@@ -12,7 +12,7 @@ void RegisterModule(std::function<std::shared_ptr<Module>()> create_module, int 
 template <typename T, int priority = 50>
 struct RegisterModuleStatic
 {
-	inline static bool registered = ([](){
+	inline static bool registered = ([]() {
 		RegisterModule([]() -> std::shared_ptr<Module> {
 			return std::make_unique<T>();
 		}, priority);

@@ -67,8 +67,8 @@ public:
 	const Class* GetDeclaringClass() const;
 	const Class* GetElementClass() const;
 	const Class* GetBase() const;
-	bool IsBaseOf(const Class* _derived) const;
-	bool IsCastable(const Class* other) const;
+	bool CanDownCastTo(const Class* _derived) const;
+	bool CanUpCastTo(const Class* _base) const;
 
 	// Non-static only
 	const Field* FindField(std::string_view field_name) const;
