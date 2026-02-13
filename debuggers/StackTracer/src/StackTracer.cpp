@@ -10,9 +10,6 @@
 #include <optional>
 #include <mutex>
 
-#define ICMF_STACK_TRACER_DBGHELP 1
-#undef ICMF_STACK_TRACER_DIA
-
 struct StackFrame
 {
 	DWORD64 address;
