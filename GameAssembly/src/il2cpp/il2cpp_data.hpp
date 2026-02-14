@@ -68,15 +68,10 @@ struct MyIl2CppData
 	System::Object* (*il2cpp_gchandle_get_target)(uint32_t gchandle);
 	void (*il2cpp_gchandle_free)(uint32_t gchandle);
 
-	const il2cpp::Method* (*il2cpp_class_get_method_from_name)(il2cpp::Class* klass, const char* name, int argsCount);
-	int (*il2cpp_init)(const char* domain_name);
-	il2cpp::Domain* (*il2cpp_domain_get)();
-	const il2cpp::Image* (*il2cpp_assembly_get_image)(const il2cpp::Assembly* assembly);
 	il2cpp::Method* (*il2cpp_class_get_methods)(il2cpp::Class* klass, void** iter);
 	il2cpp::Field* (*il2cpp_class_get_fields)(il2cpp::Class* klass, void** iter);
 	il2cpp::Property* (*il2cpp_class_get_properties)(il2cpp::Class* klass, void** iter);
 	il2cpp::Event* (*il2cpp_class_get_events)(il2cpp::Class* klass, void** iter);
-	const il2cpp::Type* (*il2cpp_class_get_type)(il2cpp::Class* klass);
 
 	std::vector<CachedClass> cached_classes;
 	std::unordered_map<const il2cpp::Type*, std::string> cached_type_names;

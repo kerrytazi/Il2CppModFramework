@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 template <
 	typename TResult,
 	typename TState,
@@ -10,13 +12,13 @@ class simple_generator
 public:
 
 	constexpr simple_generator(TState&& initial_state, TAdvance&& advance_func)
-		: initial_state_{ static_cast<TState&&>(initial_state) }
-		, advance_func_{ static_cast<TAdvance&&>(advance_func) }
+		: initial_state_{ std::move(initial_state) }
+		, advance_func_{ std::move(advance_func) }
 	{
 	}
 
 	constexpr explicit simple_generator(TAdvance&& advance_func)
-		: simple_generator(TState{}, static_cast<TAdvance&&>(advance_func))
+		: simple_generator(TState{}, std::move(advance_func))
 	{
 	}
 
@@ -68,13 +70,13 @@ private:
 template <typename TResultState, typename TAdvance>
 constexpr auto make_simple_generator(TAdvance&& advance_func)
 {
-	return simple_generator<TResultState, TResultState, TAdvance>(static_cast<TAdvance&&>(advance_func));
+	return simple_generator<TResultState, TResultState, TAdvance>(std::move(advance_func));
 }
 
 template <typename TResultState, typename TAdvance>
 constexpr auto make_simple_generator(TResultState&& initial_state, TAdvance&& advance_func)
 {
-	return simple_generator<TResultState, TResultState, TAdvance>(static_cast<TResultState&&>(initial_state), static_cast<TAdvance&&>(advance_func));
+	return simple_generator<TResultState, TResultState, TAdvance>(std::move(initial_state), std::move(advance_func));
 }
 
 template <
@@ -84,7 +86,7 @@ template <
 	typename TAdvance>
 constexpr auto make_simple_generator(TAdvance&& advance_func)
 {
-	return simple_generator<TResult, TState, TAdvance, TProjStateToResult>(static_cast<TAdvance&&>(advance_func));
+	return simple_generator<TResult, TState, TAdvance, TProjStateToResult>(std::move(advance_func));
 }
 
 template <
@@ -94,5 +96,5 @@ template <
 	typename TAdvance>
 constexpr auto make_simple_generator(TState&& initial_state, TAdvance&& advance_func)
 {
-	return simple_generator<TResult, TState, TAdvance, TProjStateToResult>(static_cast<TState&&>(initial_state), static_cast<TAdvance&&>(advance_func));
+	return simple_generator<TResult, TState, TAdvance, TProjStateToResult>(std::move(initial_state), std::move(advance_func));
 }

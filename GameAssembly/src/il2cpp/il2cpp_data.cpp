@@ -4,6 +4,13 @@
 
 #include "common/Log.hpp"
 
+#pragma comment(linker, "/alternatename:GetIl2CppFunction=DefaultGetIl2CppFunction")
+extern "C" const void* GetIl2CppFunction(const void* GameAssemblyLibrary, const char* name);
+extern "C" const void* DefaultGetIl2CppFunction(const void* GameAssemblyLibrary, const char* name)
+{
+	return GetProcAddress((HINSTANCE)GameAssemblyLibrary, name);
+}
+
 void MyIl2CppData::Init()
 {
 	if (GameAssembly)
@@ -24,7 +31,7 @@ void MyIl2CppData::Init()
 	#define init_func(_name) \
 		do \
 		{ \
-			_name = reinterpret_cast<decltype(_name)>(GetProcAddress(GameAssembly, #_name)); \
+			_name = reinterpret_cast<decltype(_name)>(GetIl2CppFunction(GameAssembly, #_name)); \
 			if (!_name) \
 				throw std::runtime_error("Can't get proc address: " #_name); \
 		} \
@@ -52,15 +59,11 @@ void MyIl2CppData::Init()
 	init_func(il2cpp_gchandle_get_target);
 	init_func(il2cpp_gchandle_free);
 
-	init_func(il2cpp_class_get_method_from_name);
-	init_func(il2cpp_init);
-	init_func(il2cpp_domain_get);
-	init_func(il2cpp_assembly_get_image);
 	init_func(il2cpp_class_get_methods);
 	init_func(il2cpp_class_get_fields);
 	init_func(il2cpp_class_get_properties);
 	init_func(il2cpp_class_get_events);
-	init_func(il2cpp_class_get_type);
+
 	#undef init_func
 
 	cached_type_names.reserve(16 * 1024);
