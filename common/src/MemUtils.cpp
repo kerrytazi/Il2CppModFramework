@@ -25,10 +25,68 @@ static constexpr std::array<uint8_t, 256> NIBBLE_TABLE = []() {
 	return result;
 }();
 
-mu::PatternSearcher::PatternSearcher(std::string_view pattern)
+bool mu::PatternSearcher::IsEqual(const void* data, size_t size /*= size_t(-1)*/) const
 {
-	pattern_.reserve(64);
-	check_.reserve(64);
+	if (size < pattern_.size())
+		return false;
+
+	const uint8_t* udata = (const uint8_t*)data;
+
+	for (size_t i = 0; i < pattern_.size(); ++i)
+	{
+		if ((udata[i] & pattern_[i]) != check_[i])
+			return false;
+	}
+
+	return true;
+}
+
+const void* mu::PatternSearcher::Find(const void* data, size_t size /*= size_t(-1)*/) const
+{
+	const uint8_t* udata = (const uint8_t*)data;
+
+	while (size >= pattern_.size())
+	{
+		if (IsEqual(udata, size))
+			return (const void*)udata;
+
+		udata += 1;
+		size -= 1;
+	}
+
+	return nullptr;
+}
+
+const void* mu::PatternSearcher::FindUp(const void* data, size_t size /*= size_t(-1)*/) const
+{
+	const uint8_t* udata = (const uint8_t*)data;
+
+	while (size >= pattern_.size())
+	{
+		if (IsEqual(udata, size))
+			return (const void*)udata;
+
+		udata -= 1;
+		size -= 1;
+	}
+
+	return nullptr;
+}
+
+mu::PatternSearcher mu::PatternSearcher::FromString(std::string_view str)
+{
+	PatternSearcher result;
+	result.pattern_.assign(str.begin(), str.end());
+	result.check_.assign(str.begin(), str.end());
+	return result;
+}
+
+mu::PatternSearcher mu::PatternSearcher::FromPattern(std::string_view pattern)
+{
+	PatternSearcher result;
+
+	result.pattern_.reserve(64);
+	result.check_.reserve(64);
 
 	auto ptr = pattern.data();
 	auto end = pattern.data() + pattern.size();
@@ -84,39 +142,9 @@ mu::PatternSearcher::PatternSearcher(std::string_view pattern)
 			check2 = 0;
 		}
 
-		pattern_.push_back((nibble1 << 4) | nibble2);
-		check_.push_back((check1 << 4) | check2);
-	}
-}
-
-bool mu::PatternSearcher::IsEqual(const void* data, size_t size /*= size_t(-1)*/) const
-{
-	if (size < pattern_.size())
-		return false;
-
-	const uint8_t* udata = (const uint8_t*)data;
-
-	for (size_t i = 0; i < pattern_.size(); ++i)
-	{
-		if ((udata[i] & pattern_[i]) != check_[i])
-			return false;
+		result.pattern_.push_back((nibble1 << 4) | nibble2);
+		result.check_.push_back((check1 << 4) | check2);
 	}
 
-	return true;
-}
-
-const void* mu::PatternSearcher::Find(const void* data, size_t size /*= size_t(-1)*/) const
-{
-	const uint8_t* udata = (const uint8_t*)data;
-
-	while (size >= pattern_.size())
-	{
-		if (IsEqual(udata, size))
-			return (const void*)udata;
-
-		udata += 1;
-		size -= 1;
-	}
-
-	return nullptr;
+	return result;
 }
